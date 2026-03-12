@@ -4,6 +4,36 @@ import os
 import random
 import numpy as np
 import sys
+import functools
+import time
+
+
+def llm_logger(func):#todo
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        func_name = func.__name__
+        
+        safe_args = []
+        for a in args:
+            if hasattr(a, 'shape'): 
+                safe_args.append(f"DataFrame{a.shape}")
+            elif isinstance(a, dict) and len(a) > 5:
+                safe_args.append(f"LargeConfig(keys={list(a.keys())[:5]}...)")
+            else:
+                safe_args.append(a)
+                
+        logging.info(f"Running {self.__class__.__name__}.{func_name}")
+        if safe_args or kwargs:
+            logging.info(f"Params: {safe_args} {kwargs if kwargs else ''}")
+
+        try:
+            result = func(self, *args, **kwargs)
+            logging.info(f"{func_name}() successfully completed")
+            return result
+        except Exception as e:
+            logging.error(f"❌ Error in {func_name}: {e}", exc_info=True)
+            raise e
+    return wrapper
 
 def load_config(path):
     """
@@ -12,17 +42,17 @@ def load_config(path):
     :return: 字典格式的設定內容
     """
     if not os.path.exists(path):
-        print(f"❌ Critical Error: Config file not found at {path}")
-        sys.exit(1)
+        logging.critical(f"❌ Critical Error: Config file not found at {path}")
+        raise RuntimeError("Data loading failed")
         
     try:
         with open(path, 'r', encoding='utf-8') as f:
             config = yaml.safe_load(f)
-            print(f"✅ 設定檔已載入: {path}")
+            logging.info(f"✅ 設定檔已載入: {path}")
             return config
     except Exception as e:
-        print(f"❌ Error loading config: {e}")
-        sys.exit(1)
+        logging.error(f"❌ Error loading config: {e}")
+        raise RuntimeError("Data loading failed")
 
 def setup_logger(log_dir="./logs", log_name="experiment.log"):
     """
@@ -33,14 +63,13 @@ def setup_logger(log_dir="./logs", log_name="experiment.log"):
     os.makedirs(log_dir, exist_ok=True)
     log_path = os.path.join(log_dir, log_name)
 
-    # 設定 logging 格式
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
+        format="%(asctime)s:%(levelname)s:%(message)s", 
+        force=True, 
         handlers=[
-            logging.FileHandler(log_path, encoding='utf-8'), # 輸出到檔案
-            logging.StreamHandler(sys.stdout)               # 輸出到終端機
+            logging.FileHandler(log_path, encoding='utf-8'), 
+            logging.StreamHandler(sys.stdout)               
         ]
     )
     logging.info(f"📝 Logger initialized. Writing to {log_path}")

@@ -1,30 +1,28 @@
 prompts:
 #============EMO================================
   EMO:
-    1: |
+    01: |
       This is very important to my career
-    2: |
+    02: |
       If you misclassify a relationship here, it could lead to severe medical errors or endanger lives.
-    3: |
+    03: |
       If you make a mistake, I will lose my job.
 #============Role================================
   Role:
-    4: |
+    04: |
       You are an expert Biocurator for a major biomedical knowledge graph
-    5: |
+    05: |
       Act as a Senior Clinical Pharmacologist
-    6: |
+    06: |
       You are a Rigorous Scientific Peer Reviewer
 #============S2A=================================
   S2A:
-    7: |
+    07: |
       Distill the "objective and non-personal" information from the text. Filter out any subjective opinions, market popularity, cost considerations, or irrelevant background information. Extract only objective clinical facts, experimental data, and statistical evidence.Then Determined the Task only by the filterd facts
-    8: |
+    08: |
       Step 1: Rewrite the text to include only the sentences or clauses that directly describe the relationship between [Entity A] and [Entity B]. Remove all background context, citations, and information about other unrelated entities.
       Step 2: Based strictly on your rewritten text, determine the specific relationship between them (e.g., Treatment, Adverse Effect, or No Relation)
-    9: |
-      Your task is to identify the interaction between [Entity A] and [Entity B].
-      The text below may contain distracting information .
+    09: |
       First, extract and list only the specific text spans that provide evidence for the interaction.
       Second, ignore the rest of the text as noise.
       Finally, classify the relationship using only the extracted evidence

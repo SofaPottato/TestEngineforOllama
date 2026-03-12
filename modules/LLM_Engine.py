@@ -1,54 +1,50 @@
-import os
+import os#todo:斷點繼續功能
 import time
 import math
 import re
 import requests
 import pandas as pd
+import logging
+import threading 
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from requests.adapters import HTTPAdapter
 class InferenceManager:
+     
     def __init__(self, config):
         """
         初始化推論管理器
         :param config: 完整的設定字典 (從 yaml 讀入)
         """
+
         self.cfg = config
-        
-        # 1. 基礎設定
         self.output_dir = config.get('output_dir', './output')
         self.models = config.get('selected_models', [])
-        
-        # 2. LLM 參數 (temperature, top_p 等)
         self.llm_options = config.get('llm_hyperparameters', {})
-        
-        # 3. 執行設定 (是否平行, Workers 數量)
         self.exec_config = config.get('execution_settings', {})
         self.is_parallel = self.exec_config.get('parallel', False)
-        self.max_workers = self.exec_config.get('max_workers', 4)
-        
-        # 4. API 設定 (URL, Timeout, Retry)
+        self.max_workers = self.exec_config.get('max_workers', 3)
+        self.model_concurrent_requests = self.exec_config.get('model_concurrent_requests', 1)
         self.api_config = config.get('ollama_server', {})
         self.api_url = self.api_config.get('url', "http://localhost:11434/api/chat")
-        self.timeout = self.api_config.get('timeout', 1800)
+        self.timeout = self.api_config.get('timeout', 600)
         self.max_retries = self.api_config.get('max_retries', 3)
-        
-        # 5. 批次與 Prompt 設定
+        self.session = requests.Session() 
+        adapter = HTTPAdapter(pool_connections=50, pool_maxsize=50)#最多一次送出多少請求
+        self.session.mount('http://', adapter)
+        self.session.mount('https://', adapter)
+        self.csv_lock = threading.Lock()     # 防止 CSV 寫入衝突的鎖
+        self._debug_lock = threading.Lock()  # 防止 Debug 訊息印出衝突的鎖
+        self._debug_printed = False          
         self.batch_settings = config.get('pair_settings', {'pair_number': 10})
         self.pair_number = self.batch_settings.get('pair_number', 10)
-        
-        # 預設 Template (防呆)
-        default_template = """Title: {title}\nAbstract: {abstract}\nItems:\n{items_content}\nAnswer Yes or No."""
+        default_template = """Title: {title}\nAbstract: {abstract}\n\nTask: Determine if the Chemical induces the Disease for the following items based strictly on the text.\n\nItems to analyze:\n{items_content}\n\nIMPORTANT OUTPUT RULES:\n1. Output ONLY a numbered list.\n2. Format: "Item X: Yes" or "Item X: No".\n3. Do NOT provide explanations.\n4. Do NOT use Markdown formatting."""
         self.task_template = config.get('task_template', default_template)
 
     def run(self, data_df, prompt_configs):
         """
         [Public] 執行的主入口
-        :param data_df: 包含資料的 DataFrame
-        :param prompt_configs: 由 PromptManager 生成的 list of dict
-        :return: 最終結果 CSV 的路徑
         """
-        # 1. 準備目錄與檔案路徑
         os.makedirs(self.output_dir, exist_ok=True)
         raw_output_dir = os.path.join(self.output_dir, "raw_results")
         os.makedirs(raw_output_dir, exist_ok=True)
@@ -57,55 +53,50 @@ class InferenceManager:
         final_save_path = os.path.join(raw_output_dir, f"raw_output_{timestamp}.csv")
         temp_save_path = os.path.join(raw_output_dir, f"temp_{timestamp}.csv")
 
-        # 2. 準備任務清單 (Flatten Tasks)
-        print("============正在準備任務批次 (Task Preparation)============")
-        tasks = self._prepare_tasks(data_df, prompt_configs)
-        print(f"總任務數: {len(tasks)} (Batches * Models * Prompts)")
-        print(f"執行模式: {'平行處理 (Parallel)' if self.is_parallel else '序列處理 (Sequential)'}")
+        # 準備任務清單 (按模型分組，防止 VRAM 反覆載入)
+        logging.info("============ 正在準備任務批次 (Task Preparation) ============")
+        tasks_dict = self._prepare_tasks(data_df, prompt_configs)
+        
+        total_tasks = sum(len(q) for q in tasks_dict.values())
+        logging.info(f"總任務數 (Batches): {total_tasks}")
+        logging.info(f"執行模式: {'平行處理 (Parallel)' if self.is_parallel else '序列處理 (Sequential)'}")
 
-        # 初始化暫存檔 (寫入 Header)
         columns = ["Data_ID", "PMID", "Model", "Prompt_ID", "E1", "E2", "True_Label", "Pred_Label", "Raw_Output"]
         pd.DataFrame(columns=columns).to_csv(temp_save_path, index=False, encoding='utf-8-sig')
 
-        # 3. 執行推論
-        results_buffer = []
         try:
             if self.is_parallel:
-                self._run_parallel(tasks, temp_save_path)
+                self._run_parallel(tasks_dict, temp_save_path)
             else:
-                self._run_sequential(tasks, temp_save_path)
+                self._run_sequential(tasks_dict, temp_save_path)
         except KeyboardInterrupt:
-            print("\n⚠️ 使用者中斷執行！目前進度已保留在暫存檔中。")
+            logging.warning("\n⚠️ 使用者中斷執行！目前進度已保留在暫存檔中。")
             return temp_save_path
 
-        # 4. 整合最終結果
-        print("🔄 正在整合與排序最終結果...")
+        logging.info("🔄 正在整合與排序最終結果...")
         if os.path.exists(temp_save_path):
             final_df = pd.read_csv(temp_save_path)
-            # 依照邏輯排序
             final_df = final_df.sort_values(['Model', 'Prompt_ID', 'Data_ID'])
             final_df.to_csv(final_save_path, index=False, encoding='utf-8-sig')
-            
-            # 刪除暫存檔
             os.remove(temp_save_path)
-            print(f"✅ 推論完成！檔案已儲存至: {final_save_path}")
+            logging.info(f"✅ 推論完成！檔案已儲存至: {final_save_path}")
+            
+
             return final_save_path
         else:
-            print("❌ 錯誤：未產生任何結果檔案。")
+            logging.error("❌ 錯誤：未產生任何結果檔案。")
             return None
 
     def _prepare_tasks(self, df, prompt_configs):
-        """[Private] 將資料、模型、Prompt 展開為單一任務列表"""
-        tasks = []
+        """[Private] 將資料、模型、Prompt 展開為按模型分組的任務字典"""
         grouped = df.groupby('PMID')
         
-        # 預先處理 Batch (減少重複計算)
         base_batches = []
         for pmid, group in grouped:
             title = group.iloc[0]['Title']
             abstract = str(group.iloc[0]['Abstract'])
             
-            pairs_list = []
+            pairs_list = []#設置輸入配對
             for idx, row in group.iterrows():
                 pairs_list.append({
                     'orig_idx': idx,
@@ -114,7 +105,6 @@ class InferenceManager:
                     'True_Label': row.get('Relation_Type', row.get('Label', ''))
                 })
             
-            # 切分 Batch
             for i in range(0, len(pairs_list), self.pair_number):
                 batch_pairs = pairs_list[i : i + self.pair_number]
                 base_batches.append({
@@ -124,90 +114,101 @@ class InferenceManager:
                     'batch_pairs': batch_pairs
                 })
         
-        # 展開所有組合 (Model x Prompt x Batch)
+        model_task_queues = {model: [] for model in self.models}
+        
         for model in self.models:
             for p_config in prompt_configs:
                 for batch in base_batches:
-                    tasks.append({
+                    model_task_queues[model].append({
                         'model': model,
                         'sys_prompt': p_config['text'],
                         'prompt_id': p_config['id'],
                         'batch_data': batch
                     })
-        return tasks
+                    
+        return model_task_queues
 
-    def _run_parallel(self, tasks, temp_path):
-        """[Private] 平行執行模式"""
+    def _process_model_queue(self, model_name, task_list, temp_path, progress_bar=None):
+        """[Private] 專屬執行緒函式：處理單一模型的所有任務 (支援模型內部的平行併發)"""
         results_buffer = []
-        print(f"⚠️ 平行模式開啟 (Workers={self.max_workers})")
         
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            futures = [executor.submit(self._process_single_task, task) for task in tasks]
+        with ThreadPoolExecutor(max_workers=self.model_concurrent_requests) as inner_executor:
+            futures = [inner_executor.submit(self._process_single_task, task) for task in task_list]
             
-            for future in tqdm(as_completed(futures), total=len(tasks), desc="平行推論進度", unit="batch"):
+            for future in as_completed(futures):
                 try:
                     batch_res = future.result()
                     results_buffer.extend(batch_res)
                     
-                    # 批量寫入 (減少 I/O)
-                    if len(results_buffer) >= 50:
+                    if len(results_buffer) >= (100 * self.pair_number):
                         self._append_to_csv(results_buffer, temp_path)
-                        results_buffer = [] # 清空
+                        results_buffer = [] 
+                        
                 except Exception as e:
-                    print(f"❌ Task Error: {e}")
+                    logging.error(f"❌ Task Error ({model_name}): {e}")
+                    
+                if progress_bar:
+                    progress_bar.update(1)
 
-        # 寫入剩餘資料
         if results_buffer:
             self._append_to_csv(results_buffer, temp_path)
 
-    def _run_sequential(self, tasks, temp_path):
-        """[Private] 序列執行模式"""
-        results_buffer = []
-        for task in tqdm(tasks, total=len(tasks), desc="序列推論進度", unit="batch"):
-            try:
-                batch_res = self._process_single_task(task)
-                results_buffer.extend(batch_res)
+    def _run_parallel(self, tasks_dict, temp_path):
+        """[Private] 平行執行模式 (一模型一執行緒)"""
+        num_models = len(tasks_dict)
+        workers = min(self.max_workers, num_models)
+        
+        logging.info(f"⚠️ 平行模式開啟 (分配了 {workers} 個專屬執行緒處理 {num_models} 個模型)")
+        total_tasks = sum(len(q) for q in tasks_dict.values())
+        
+        with tqdm(total=total_tasks, desc="平行推論總進度", unit="batch") as pbar:
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                futures = []
+                for model_name, task_list in tasks_dict.items():
+                    future = executor.submit(self._process_model_queue, model_name, task_list, temp_path, pbar)
+                    futures.append(future)
                 
-                if len(results_buffer) >= 10:
-                    self._append_to_csv(results_buffer, temp_path)
-                    results_buffer = []
-            except Exception as e:
-                print(f"❌ Task Error: {e}")
+                for future in as_completed(futures):
+                    future.result() 
 
-        if results_buffer:
-            self._append_to_csv(results_buffer, temp_path)
-
+    def _run_sequential(self, tasks_dict, temp_path):
+        """[Private] 序列執行模式"""
+        total_tasks = sum(len(q) for q in tasks_dict.values())
+        
+        with tqdm(total=total_tasks, desc="序列推論總進度", unit="batch") as pbar:
+            for model_name, task_list in tasks_dict.items():
+                logging.info(f"🚀 開始處理模型: {model_name}")
+                self._process_model_queue(model_name, task_list, temp_path, pbar)
+                 
     def _process_single_task(self, task):
-        """[Private] 處理單一原子任務 (Atomic Task)"""
+        """[Private] 處理單一原子任務 (包含 Prompt 生成、API 呼叫與解析)"""
         batch_data = task['batch_data']
         model = task['model']
         
-        # 1. 建立 User Prompt
         user_text = self._create_batch_prompt(
             batch_data['title'], 
             batch_data['abstract'], 
             batch_data['batch_pairs']
         )
-        # 印出第一個prompt
-        if not hasattr(self, '_debug_printed'):
-            print("\n" + "="*60)
-            print(f"正在檢視模型: {model} | Prompt ID: {task['prompt_id']}")
-            print("-" * 30)
-            print("【System Prompt】:")
-            print(task['sys_prompt'])
-            print("-" * 30)
-            print("【User Prompt】")
-            print(user_text)
-            print("="*60 + "\n")
-            self._debug_printed = True
-        # ===============================================================
-        # 2. 呼叫 API
-        raw_response = self._query_ollama(model, task['sys_prompt'], user_text)
         
-        # 3. 解析結果
+        if not self._debug_printed:
+            with self._debug_lock:
+                if not self._debug_printed:
+                    debug_msg = (
+                        f"\n{'='*60}\n"
+                        f"📢 正在檢視模型: {model} | Prompt ID: {task['prompt_id']}\n"
+                        #f"{'-'*30}\n"
+                        f"【System Prompt】:  {task['sys_prompt']}"
+                        #f"{'-'*30}\n"
+                        #f"【User Prompt】:\n{user_text}\n"
+                        f"{'='*60}"
+                    )
+                    logging.info(debug_msg)
+                    self._debug_printed = True
+            
+        raw_response = self._query_ollama(model, task['sys_prompt'], user_text)
         parsed_answers = self._parse_batch_response(raw_response, len(batch_data['batch_pairs']))
         
-        # 4. 格式化輸出
         results = []
         for j, pair_info in enumerate(batch_data['batch_pairs']):
             ans = parsed_answers[j] if j < len(parsed_answers) else "Index_Error"
@@ -237,10 +238,11 @@ class InferenceManager:
                 items_content=items_content
             )
         except KeyError as e:
+            logging.error(f"Error: Template format error. Missing key: {e}")
             return f"Error: Template format error. Missing key: {e}"
 
     def _query_ollama(self, model, sys_prompt, user_prompt):
-        """[Private] 發送 API 請求 (含 Retry 機制)"""
+        """[Private] 發送 API 請求 (含 Timeout 與 Exponential Backoff Retry 機制)"""
         payload = {
             "model": model,
             "messages": [
@@ -253,35 +255,37 @@ class InferenceManager:
 
         for attempt in range(self.max_retries):
             try:
-                response = requests.post(self.api_url, json=payload, timeout=self.timeout)
+                response = self.session.post(self.api_url, json=payload, timeout=self.timeout)
                 if response.status_code == 200:
                     return response.json().get('message', {}).get('content', '')
                 else:
                     err = f"HTTP {response.status_code}: {response.text}"
-                    print(f"⚠️ API Error (Attempt {attempt+1}): {err}")
-                    logging.info(f"⚠️ API Error (Attempt {attempt+1}): {err}")
+                    logging.warning(f"⚠️ API Error (Attempt {attempt+1}): {err}")
             except Exception as e:
-                print(f"⚠️ Connection Error (Attempt {attempt+1}): {e}")
+                logging.warning(f"⚠️ Connection Error (Attempt {attempt+1}): {e}")
             
-            # Exponential backoff
             if attempt < self.max_retries - 1:
                 time.sleep(2 ** attempt)
 
+        logging.error("❌ Error: Max retries exceeded during API call.")
         return "Error: Max retries exceeded"
 
     def _parse_batch_response(self, text, batch_size):
-        """[Private] 解析 LLM 回傳的 Item List"""
         clean_results = ["Parse_Error"] * batch_size
         if not text or "Error:" in text:
             return clean_results
-
-        for i in range(1, batch_size + 1):
-            pattern = re.compile(rf"(?:Item|No\.?|^|\n)\s*\**{i}\**[^a-zA-Z0-9]*(Yes|No)", re.IGNORECASE)
-            match = pattern.search(text)
-            if match:
-                clean_results[i-1] = match.group(1).title() # Yes/No
+        pattern = re.compile(r"(?:Item|No\.?|^|\n)\s*\**(\d+)\**[^a-zA-Z0-9]*(Yes|No)", re.IGNORECASE)
+        matches = pattern.findall(text)
+        for num_str, answer in matches:
+            idx = int(num_str) - 1  
+            if 0 <= idx < batch_size:
+                clean_results[idx] = answer.title()
+                
         return clean_results
-
     def _append_to_csv(self, data, path):
-        """[Private] 將資料 Append 到 CSV"""
-        pd.DataFrame(data).to_csv(path, mode='a', header=False, index=False, encoding='utf-8-sig')
+        """[Private] 將資料 Append 到 CSV """
+        if not data:
+            return
+            
+        with self.csv_lock:
+            pd.DataFrame(data).to_csv(path, mode='a', header=False, index=False, encoding='utf-8-sig')

@@ -15,7 +15,7 @@ def main():
     setup_logger(log_dir="./logs", log_name=f"experiment{timestamp}.log")
     setup_seed(42)  # 固定種子，保證實驗可重現
     logging.info("========================================")
-    logging.info("      LLM Experiment Framework v2.0     ")
+    logging.info("      Ollama LLM Engine      ")
     logging.info("========================================")
 
     # 3. 讀取設定檔
