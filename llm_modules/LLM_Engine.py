@@ -1,250 +1,32 @@
-import os#todo:斷點繼續功能
 import time
-import math
-import re
 import requests
-import pandas as pd
 import logging
 import threading 
 from tqdm import tqdm
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from requests.adapters import HTTPAdapter
-class InferenceManager:
-     
-    def __init__(self, config):
-        """
-        初始化推論管理器
-        :param config: 完整的設定字典 (從 yaml 讀入)
-        """
+from typing import Dict, List, Any
 
-        self.cfg = config
-        self.output_dir = config.get('output_dir', './output')
-        self.models = config.get('selected_models', [])
-        self.llm_options = config.get('llm_hyperparameters', {})
-        self.exec_config = config.get('execution_settings', {})
-        self.is_parallel = self.exec_config.get('parallel', False)
-        self.max_workers = self.exec_config.get('max_workers', 3)
-        self.model_concurrent_requests = self.exec_config.get('model_concurrent_requests', 1)
-        self.api_config = config.get('ollama_server', {})
-        self.api_url = self.api_config.get('url', "http://localhost:11434/api/chat")
-        self.timeout = self.api_config.get('timeout', 600)
-        self.max_retries = self.api_config.get('max_retries', 3)
+class OllamaClient:
+    """
+    純粹的 API 客戶端，負責與 Ollama 伺服器進行通訊與錯誤重試。
+    """
+    def __init__(self, api_config: Dict[str, Any], llm_options: Dict[str, Any]):
+        self.api_url = api_config.get('url', "http://localhost:11434/api/chat")
+        self.timeout = api_config.get('timeout', 1800)
+        self.max_retries = api_config.get('max_retries', 3)
+        self.llm_options = llm_options
+        
+        # 設定 HTTP 連線池，提升大量併發時的效能
         self.session = requests.Session() 
-        adapter = HTTPAdapter(pool_connections=50, pool_maxsize=50)#最多一次送出多少請求
+        adapter = HTTPAdapter(pool_connections=50, pool_maxsize=50)
         self.session.mount('http://', adapter)
         self.session.mount('https://', adapter)
-        self.csv_lock = threading.Lock()     # 防止 CSV 寫入衝突的鎖
-        self._debug_lock = threading.Lock()  # 防止 Debug 訊息印出衝突的鎖
-        self._debug_printed = False          
-        self.batch_settings = config.get('pair_settings', {'pair_number': 10})
-        self.pair_number = self.batch_settings.get('pair_number', 10)
-        default_template = """Title: {title}\nAbstract: {abstract}\n\nTask: Determine if the Chemical induces the Disease for the following items based strictly on the text.\n\nItems to analyze:\n{items_content}\n\nIMPORTANT OUTPUT RULES:\n1. Output ONLY a numbered list.\n2. Format: "Item X: Yes" or "Item X: No".\n3. Do NOT provide explanations.\n4. Do NOT use Markdown formatting."""
-        self.task_template = config.get('task_template', default_template)
 
-    def run(self, data_df, prompt_configs):
-        """
-        [Public] 執行的主入口
-        """
-        os.makedirs(self.output_dir, exist_ok=True)
-        raw_output_dir = os.path.join(self.output_dir, "raw_results")
-        os.makedirs(raw_output_dir, exist_ok=True)
-        
-        timestamp = time.strftime("%Y%m%d_%H%M")
-        final_save_path = os.path.join(raw_output_dir, f"raw_output_{timestamp}.csv")
-        temp_save_path = os.path.join(raw_output_dir, f"temp_{timestamp}.csv")
-
-        # 準備任務清單 (按模型分組，防止 VRAM 反覆載入)
-        logging.info("============ 正在準備任務批次 (Task Preparation) ============")
-        tasks_dict = self._prepare_tasks(data_df, prompt_configs)
-        
-        total_tasks = sum(len(q) for q in tasks_dict.values())
-        logging.info(f"總任務數 (Batches): {total_tasks}")
-        logging.info(f"執行模式: {'平行處理 (Parallel)' if self.is_parallel else '序列處理 (Sequential)'}")
-
-        columns = ["Data_ID", "PMID", "Model", "Prompt_ID", "E1", "E2", "True_Label", "Pred_Label", "Raw_Output"]
-        pd.DataFrame(columns=columns).to_csv(temp_save_path, index=False, encoding='utf-8-sig')
-
-        try:
-            if self.is_parallel:
-                self._run_parallel(tasks_dict, temp_save_path)
-            else:
-                self._run_sequential(tasks_dict, temp_save_path)
-        except KeyboardInterrupt:
-            logging.warning("\n⚠️ 使用者中斷執行！目前進度已保留在暫存檔中。")
-            return temp_save_path
-
-        logging.info("🔄 正在整合與排序最終結果...")
-        if os.path.exists(temp_save_path):
-            final_df = pd.read_csv(temp_save_path)
-            final_df = final_df.sort_values(['Model', 'Prompt_ID', 'Data_ID'])
-            final_df.to_csv(final_save_path, index=False, encoding='utf-8-sig')
-            os.remove(temp_save_path)
-            logging.info(f"✅ 推論完成！檔案已儲存至: {final_save_path}")
-            
-
-            return final_save_path
-        else:
-            logging.error("❌ 錯誤：未產生任何結果檔案。")
-            return None
-
-    def _prepare_tasks(self, df, prompt_configs):
-        """[Private] 將資料、模型、Prompt 展開為按模型分組的任務字典"""
-        grouped = df.groupby('PMID')
-        
-        base_batches = []
-        for pmid, group in grouped:
-            title = group.iloc[0]['Title']
-            abstract = str(group.iloc[0]['Abstract'])
-            
-            pairs_list = []#設置輸入配對
-            for idx, row in group.iterrows():
-                pairs_list.append({
-                    'orig_idx': idx,
-                    'E1_Name': row['E1_Name'],
-                    'E2_Name': row['E2_Name'],
-                    'True_Label': row.get('Relation_Type', row.get('Label', ''))
-                })
-            
-            for i in range(0, len(pairs_list), self.pair_number):
-                batch_pairs = pairs_list[i : i + self.pair_number]
-                base_batches.append({
-                    'pmid': pmid,
-                    'title': title,
-                    'abstract': abstract,
-                    'batch_pairs': batch_pairs
-                })
-        
-        model_task_queues = {model: [] for model in self.models}
-        
-        for model in self.models:
-            for p_config in prompt_configs:
-                for batch in base_batches:
-                    model_task_queues[model].append({
-                        'model': model,
-                        'sys_prompt': p_config['text'],
-                        'prompt_id': p_config['id'],
-                        'batch_data': batch
-                    })
-                    
-        return model_task_queues
-
-    def _process_model_queue(self, model_name, task_list, temp_path, progress_bar=None):
-        """[Private] 專屬執行緒函式：處理單一模型的所有任務 (支援模型內部的平行併發)"""
-        results_buffer = []
-        
-        with ThreadPoolExecutor(max_workers=self.model_concurrent_requests) as inner_executor:
-            futures = [inner_executor.submit(self._process_single_task, task) for task in task_list]
-            
-            for future in as_completed(futures):
-                try:
-                    batch_res = future.result()
-                    results_buffer.extend(batch_res)
-                    
-                    if len(results_buffer) >= (100 * self.pair_number):
-                        self._append_to_csv(results_buffer, temp_path)
-                        results_buffer = [] 
-                        
-                except Exception as e:
-                    logging.error(f"❌ Task Error ({model_name}): {e}")
-                    
-                if progress_bar:
-                    progress_bar.update(1)
-
-        if results_buffer:
-            self._append_to_csv(results_buffer, temp_path)
-
-    def _run_parallel(self, tasks_dict, temp_path):
-        """[Private] 平行執行模式 (一模型一執行緒)"""
-        num_models = len(tasks_dict)
-        workers = min(self.max_workers, num_models)
-        
-        logging.info(f"⚠️ 平行模式開啟 (分配了 {workers} 個專屬執行緒處理 {num_models} 個模型)")
-        total_tasks = sum(len(q) for q in tasks_dict.values())
-        
-        with tqdm(total=total_tasks, desc="平行推論總進度", unit="batch") as pbar:
-            with ThreadPoolExecutor(max_workers=workers) as executor:
-                futures = []
-                for model_name, task_list in tasks_dict.items():
-                    future = executor.submit(self._process_model_queue, model_name, task_list, temp_path, pbar)
-                    futures.append(future)
-                
-                for future in as_completed(futures):
-                    future.result() 
-
-    def _run_sequential(self, tasks_dict, temp_path):
-        """[Private] 序列執行模式"""
-        total_tasks = sum(len(q) for q in tasks_dict.values())
-        
-        with tqdm(total=total_tasks, desc="序列推論總進度", unit="batch") as pbar:
-            for model_name, task_list in tasks_dict.items():
-                logging.info(f"🚀 開始處理模型: {model_name}")
-                self._process_model_queue(model_name, task_list, temp_path, pbar)
-                 
-    def _process_single_task(self, task):
-        """[Private] 處理單一原子任務 (包含 Prompt 生成、API 呼叫與解析)"""
-        batch_data = task['batch_data']
-        model = task['model']
-        
-        user_text = self._create_batch_prompt(
-            batch_data['title'], 
-            batch_data['abstract'], 
-            batch_data['batch_pairs']
-        )
-        
-        if not self._debug_printed:
-            with self._debug_lock:
-                if not self._debug_printed:
-                    debug_msg = (
-                        f"\n{'='*60}\n"
-                        f"📢 正在檢視模型: {model} | Prompt ID: {task['prompt_id']}\n"
-                        #f"{'-'*30}\n"
-                        f"【System Prompt】:  {task['sys_prompt']}"
-                        #f"{'-'*30}\n"
-                        #f"【User Prompt】:\n{user_text}\n"
-                        f"{'='*60}"
-                    )
-                    logging.info(debug_msg)
-                    self._debug_printed = True
-            
-        raw_response = self._query_ollama(model, task['sys_prompt'], user_text)
-        parsed_answers = self._parse_batch_response(raw_response, len(batch_data['batch_pairs']))
-        
-        results = []
-        for j, pair_info in enumerate(batch_data['batch_pairs']):
-            ans = parsed_answers[j] if j < len(parsed_answers) else "Index_Error"
-            results.append({
-                "Data_ID": pair_info['orig_idx'],
-                "PMID": batch_data['pmid'],
-                "Model": model,
-                "Prompt_ID": task['prompt_id'],
-                "E1": pair_info['E1_Name'],
-                "E2": pair_info['E2_Name'],
-                "True_Label": pair_info['True_Label'],
-                "Pred_Label": ans,
-                "Raw_Output": raw_response
-            })
-        return results
-
-    def _create_batch_prompt(self, title, abstract, pairs):
-        """[Private] 使用 Template 建立 Prompt"""
-        items_content = ""
-        for i, pair in enumerate(pairs, 1):
-            items_content += f"Item {i}: Chemical: {pair['E1_Name']} | Disease: {pair['E2_Name']}\n"
-            
-        try:
-            return self.task_template.format(
-                title=title,
-                abstract=abstract,
-                items_content=items_content
-            )
-        except KeyError as e:
-            logging.error(f"Error: Template format error. Missing key: {e}")
-            return f"Error: Template format error. Missing key: {e}"
-
-    def _query_ollama(self, model, sys_prompt, user_prompt):
-        """[Private] 發送 API 請求 (含 Timeout 與 Exponential Backoff Retry 機制)"""
+    def generate(self, model_name: str, sys_prompt: str, user_prompt: str) -> str:
+        """發送請求並回傳 LLM 文字結果"""
         payload = {
-            "model": model,
+            "model": model_name,
             "messages": [
                 {"role": "system", "content": sys_prompt},
                 {"role": "user", "content": user_prompt}
@@ -259,33 +41,93 @@ class InferenceManager:
                 if response.status_code == 200:
                     return response.json().get('message', {}).get('content', '')
                 else:
-                    err = f"HTTP {response.status_code}: {response.text}"
-                    logging.warning(f"⚠️ API Error (Attempt {attempt+1}): {err}")
+                    logging.warning(f"⚠️ API Error (Attempt {attempt+1}): HTTP {response.status_code} - {response.text}")
             except Exception as e:
                 logging.warning(f"⚠️ Connection Error (Attempt {attempt+1}): {e}")
             
+            # 發生錯誤時，等待一段時間再重試 (1秒, 2秒, 4秒...)
             if attempt < self.max_retries - 1:
                 time.sleep(2 ** attempt)
 
-        logging.error("❌ Error: Max retries exceeded during API call.")
+        logging.error(f"❌ Error: Model {model_name} max retries exceeded.")
         return "Error: Max retries exceeded"
 
-    def _parse_batch_response(self, text, batch_size):
-        clean_results = ["Parse_Error"] * batch_size
-        if not text or "Error:" in text:
-            return clean_results
-        pattern = re.compile(r"(?:Item|No\.?|^|\n)\s*\**(\d+)\**[^a-zA-Z0-9]*(Yes|No)", re.IGNORECASE)
-        matches = pattern.findall(text)
-        for num_str, answer in matches:
-            idx = int(num_str) - 1  
-            if 0 <= idx < batch_size:
-                clean_results[idx] = answer.title()
+
+class ParallelInferenceEngine:
+    """
+    通用的多執行緒推論引擎。
+    只接收網路與執行緒設定，不參與任何檔案 I/O 操作。
+    """
+    def __init__(self, api_config: Dict[str, Any], llm_options: Dict[str, Any], exec_settings: Dict[str, Any]):
+        self.is_parallel = exec_settings.get('parallel', False)
+        self.max_workers = exec_settings.get('max_workers', 3)
+        self.model_concurrent_requests = exec_settings.get('model_concurrent_requests', 1)
+        
+        # 實例化 API 客戶端
+        self.client = OllamaClient(api_config, llm_options)
+        
+        self._debug_lock = threading.Lock()
+        self._debug_printed = False
+
+    def run_tasks(self, tasks: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        執行推論任務。
+        :param tasks: List of Dict. 必須包含 'model', 'sys_prompt', 'user_prompt' 等鍵值。
+        :return: List of Dict. 回傳原本的任務字典，並新增 'raw_output' 鍵值儲存 LLM 回應。
+        """
+        if not tasks:
+            logging.warning("⚠️ 接收到的任務清單為空！")
+            return []
+
+        logging.info(f"🚀 開始執行推論，共 {len(tasks)} 筆任務...")
+        logging.info(f"⚙️ 執行模式: {'平行處理 (Parallel)' if self.is_parallel else '序列處理 (Sequential)'}")
+        logging.info(f"⚙️ 最大執行緒數: {self.max_workers}")
+
+        results = []
+        # 如果不啟用平行處理，則強制為 1 個 Worker
+        workers = self.max_workers if self.is_parallel else 1
+
+        # 使用 tqdm 顯示進度條
+        with tqdm(total=len(tasks), desc="推論進度", unit="task") as pbar:
+            with ThreadPoolExecutor(max_workers=workers) as executor:
+                # 提交所有任務到執行緒池
+                future_to_task = {
+                    executor.submit(self._process_single_task, task): task 
+                    for task in tasks
+                }
                 
-        return clean_results
-    def _append_to_csv(self, data, path):
-        """[Private] 將資料 Append 到 CSV """
-        if not data:
-            return
+                # 收集完成的任務結果
+                for future in as_completed(future_to_task):
+                    try:
+                        res = future.result()
+                        results.append(res)
+                    except Exception as e:
+                        logging.error(f"❌ 任務執行發生嚴重錯誤: {e}")
+                    finally:
+                        pbar.update(1)
+        
+        logging.info("✅ 所有推論任務執行完畢！")
+        return results
+
+    def _process_single_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """[Private] 處理單一原子任務，呼叫 Client 並回傳結果"""
+        model = task.get('model', 'unknown_model')
+        sys_p = task.get('sys_prompt', '')
+        user_p = task.get('user_prompt', '')
+        
+        # 僅印出一次 Debug 資訊確認格式正確，避免控制台被洗版
+        if not self._debug_printed:
+            with self._debug_lock:
+                if not self._debug_printed:
+                    logging.info(f"\n📢 [Debug] Model: {model} \n📢 [Debug] System: {sys_p[:100]}...\n📢 [Debug] User: {user_p[:100]}...")
+                    self._debug_printed = True
             
-        with self.csv_lock:
-            pd.DataFrame(data).to_csv(path, mode='a', header=False, index=False, encoding='utf-8-sig')
+        # 呼叫 Ollama API 進行推論
+        raw_output = self.client.generate(model, sys_p, user_p)
+        
+        # 複製原本的任務資料，並附加上 LLM 的輸出結果與時間戳記
+        completed_task = task.copy()
+        completed_task['raw_output'] = raw_output
+        completed_task['timestamp'] = time.strftime("%Y-%m-%d %H:%M:%S")
+        
+        return completed_task

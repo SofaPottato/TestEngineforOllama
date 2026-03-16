@@ -1,32 +1,35 @@
+# main_LLM.py (主程式)
 import argparse
 import logging
 import time
-from modules.utils import load_config, setup_logger, setup_seed
-from modules.Pipeline import ExperimentPipeline
+from llm_modules.utils import LLMConfigManager, setup_logger, setup_seed
+from llm_modules.Pipeline import ExperimentPipeline
 
 def main():
-    # 1. 解析命令列參數
-    parser = argparse.ArgumentParser(description="LLM Experiment Runner")
-    parser.add_argument('--config', type=str, default='config/llm_config.yaml', help='Path to YAML config file')
+    parser = argparse.ArgumentParser(description="LLM Inference Runner")
+    parser.add_argument('--config', type=str, default='configs/llm_config.yaml', help='Path to YAML config file')
     args = parser.parse_args()
 
-    # 2. 初始化環境
     timestamp = time.strftime("%Y%m%d_%H%M")
-    setup_logger(log_dir="./logs", log_name=f"experiment{timestamp}.log")
-    setup_seed(42)  # 固定種子，保證實驗可重現
+    setup_logger(log_dir="./logs", log_name=f"llm_inference_{timestamp}.log")
+    setup_seed(42)
+    
     logging.info("========================================")
-    logging.info("      Ollama LLM Engine      ")
+    logging.info("        Ollama            ")
     logging.info("========================================")
 
-    # 3. 讀取設定檔
-    cfg = load_config(args.config)
-
-    # 4. 啟動 Pipeline
     try:
-        pipeline = ExperimentPipeline(cfg)
+        # 1. 載入並解析設定檔與路徑
+        config_manager = LLMConfigManager(args.config)
+        
+        # 2. 將 ConfigManager 傳給 Pipeline
+        pipeline = ExperimentPipeline(config_manager)
+        
+        # 3. 執行！
         pipeline.run()
+        
     except Exception as e:
-        logging.critical(f"❌ Unhandled Exception in Pipeline: {e}", exc_info=True)
+        logging.critical(f"❌ 發生未預期的錯誤: {e}", exc_info=True)
 
 if __name__ == "__main__":
     main()

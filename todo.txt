@@ -1,0 +1,13 @@
+#ML部分路徑自訂boruta
+#prompt 組合(命名camel格式)(輸出list與總結範例)(main_prompt generatodo )dictionarylist改為Dict與List路徑加Path 
+#與LLM分開(callLLM API->輸出->)->main_feature->main_ML
+#pycharm refactor
+# ================= 檔案路徑 =================
+
+#TODO:用戶自訂路徑，放所有東西 1.每個PROMPT 輸出一個檔案2.把輸出/結果併成DATA FRAME 路徑可自訂 3.EVAL清單 4.sampledata
+#TODO 輸出PROMPT LIST (ON/OFF)，放在PROMPT  自訂路徑 預設 放在PROMPT
+==================DONE==========================
+prompt_generarte 部分移出main_LLM
+改為固定輸出prompt list 
+main_LLM 讀取promptlist(自訂路徑)
+mainLLM部分還在修改

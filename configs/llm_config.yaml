@@ -1,0 +1,65 @@
+#ML部分 路徑自訂 boruta
+#(main_prompt generatodo )
+#3.EVAL清單 4.sampledata
+
+# =========================================================================
+# LLM 推論專屬設定檔 (LLM Inference Config)
+# =========================================================================
+
+# ================= 1. 檔案路徑設定 (Paths) =================
+paths:
+  # --- 輸入路徑 (Inputs) ---
+  dataPath: "data/bcvcdr_raw/BCVCDR_Processed.csv"
+  promptsPath: "data/prompt_output/generatedPromptList.csv" # 從 Prompt 模組讀取組合好的清單
+  
+  # --- 輸出路徑 (Outputs)(可自訂) ---
+  mainOutputDir: "data/llm_output/"        
+  rawOutputPath: ""         #生的                
+  resultOutputPath: ""      #放處理過的                  
+  singlePromptOutputDir: "" #裡面放單獨prompt的結果                
+  mergedLlmOutputPath: "data/llm_output/"     #所有欄位總成(ID/titlr/abstract/entity/relation/processedrelation) 
+  evalDataDirPath: ""       #放圖表                   
+
+# ================= 2. LLM 模型與連線設定 =================
+selected_models:
+  - "gemma3:270m"
+  #- "llama3.1:8b"
+
+ollama_server:
+  url: "http://localhost:11434/api/chat"
+  timeout: 1800
+
+llm_hyperparameters:
+  temperature: 0      
+  num_predict: -1     
+  num_ctx: 8192
+  num_gpu: 99
+  repeat_penalty: 1.1   
+
+# ================= 3. 執行與批量設定 =================
+execution_settings:
+  test_limit: 2
+  parallel: true
+  max_workers: 2 
+  model_concurrent_requests: 12
+
+pair_settings:
+  enabled: true       
+  pair_number: 10   
+  save_every_n_batches: 100  
+
+# ================= 4. User Prompt 模板 =================
+task_template: |
+  Title: {title}
+  Abstract: {abstract}
+
+  Task: Determine if the Chemical induces the Disease for the following items based strictly on the text.
+
+  Items to analyze:
+  {items_content}
+
+  IMPORTANT OUTPUT RULES:
+  1. Output ONLY a numbered list.
+  2. Format: "Item X: Yes" or "Item X: No".
+  3. Do NOT provide explanations.
+  4. Do NOT use Markdown formatting.
