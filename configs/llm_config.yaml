@@ -12,25 +12,26 @@ paths:
   dataPath: "data/bcvcdr_raw/BCVCDR_Processed.csv"
   promptsPath: "data/prompt_output/test_manual_prompts.csv" # 從 Prompt 模組讀取組合好的清單
   # --- 輸出路徑 (Outputs)(可自訂) ---
-  mainOutputDir: "data/llm_output/"        
-  rawOutputPath: ""         #生的                
-  resultOutputPath: ""      #放處理過的                  
-  singlePromptOutputDir: "" #裡面放單獨prompt的結果                
-  mergedLlmOutputPath: "data/llm_output/"     #所有欄位總成(ID/titlr/abstract/entity/relation/processedrelation) 
-  evalDataDirPath: ""       #放圖表                   
+  mainOutputDir: "data/test_V2/"
+  singlePromptOutputDir: "data/test_V2/single/output" #裡面放單獨prompt的結果
+  evalDataDir: "data/test_V2/plots"       #放圖表
+  rawOutputPath: "data/test_V2/raw.csv"         #生的                
+  resultOutputPath: "data/test_V2/result.csv"      #放處理過的
+  mergedLlmOutputPath: "data/test_V2/test_merge.csv"     #所有欄位總成(ID/titlr/abstract/entity/relation/processed/relation) 
+
 
 # ================= 2. LLM 模型與連線設定 =================
-selected_models:
+selectedModels:
   #- "gemma3:270m"
   - "llama3.2:1b"
 
-test_limit: 20
+testLimits: 20
 
-ollama_server:
+ollamaServer:
   url: "http://localhost:11434/api/chat"
-  timeout: 1800
+  timeout: 600
 
-llm_hyperparameters:
+llmHyperparameters:
   temperature: 0      
   num_predict: -1     
   num_ctx: 8192
@@ -38,18 +39,16 @@ llm_hyperparameters:
   repeat_penalty: 1.1   
 
 # ================= 3. 執行與批量設定 =================
-execution_settings:
+executionSettings:
+  modelConcurrentRequests: 12
 
- # max_workers: 2 
-  model_concurrent_requests: 12
-
-pair_settings:
-  enabled: true       
-  pair_number: 10   
-  save_every_n_batches: 100  
+pairSettings:
+  enabled: true
+  pairNumbers: 10
+  saveEveryNBatches: 100
 
 # ================= 4. User Prompt 模板 =================
-task_template: |
+taskTemplate: |
   Title: {title}
   Abstract: {abstract}
 

@@ -18,9 +18,9 @@ class LLMEvaluationSystem:
         self.input_csv_path = input_csv_path
         self.df = pd.read_csv(input_csv_path)
         
-        self.fixed_cols = ['Data_ID', 'PMID', 'E1', 'E2', 'True_Numeric']
+        self.fixed_cols = ['Data_ID', 'PMID', 'E1', 'E2', 'True_Label']
         self.pred_cols = [c for c in self.df.columns if c not in self.fixed_cols]
-        self.y_true = self.df['True_Numeric']
+        self.y_true = self.df['True_Label']
         
         self.results_list = []
         self.report_df = None
@@ -28,8 +28,7 @@ class LLMEvaluationSystem:
         self.hard_samples = None
         self.upper_bound = 0.0
         
-        timestamp = time.strftime("%Y%m%d_%H%M")
-        self.output_dir = os.path.join(output_base_dir, f"Eval_{timestamp}")
+        self.output_dir = output_base_dir
         self.plots_dir = os.path.join(self.output_dir, "plots")
         os.makedirs(self.plots_dir, exist_ok=True)
         
@@ -53,7 +52,7 @@ class LLMEvaluationSystem:
         return {k: round(v, 2) for k, v in metrics.items()}#到小數兩位
     
     
-    def run_evaluation(self):
+    def runEvaluation(self):
         """
         執行主要評估迴圈：遍歷所有模型欄位，計算指標並記錄對錯
         """
@@ -95,7 +94,7 @@ class LLMEvaluationSystem:
 
         correct_counts = self.correctness_matrix.sum(axis=1)
         hard_indices = correct_counts[correct_counts == 0].index
-        self.hard_samples = self.df.loc[hard_indices, ['Data_ID', 'PMID', 'True_Numeric']]
+        self.hard_samples = self.df.loc[hard_indices, ['Data_ID', 'PMID', 'True_Label']]
 
         total_samples = len(self.df)
         solvable_samples = total_samples - len(self.hard_samples)
@@ -103,7 +102,7 @@ class LLMEvaluationSystem:
         
         logging.info(f"Difficulty Analysis Complete. Upper Bound: {self.upper_bound:.2%} (Found {len(self.hard_samples)} hard samples)")
 
-    def plot_confusion_matrices(self):
+    def plotConfusionMatrices(self):
         """
         為每個模型繪製混淆矩陣並存檔
         """
@@ -134,7 +133,7 @@ class LLMEvaluationSystem:
             plt.close()
             
 
-    def plot_heatmap(self):
+    def plotHeatmap(self):
         """
         繪製模型對錯分佈熱圖 (Heatmap)
         """        
@@ -153,7 +152,7 @@ class LLMEvaluationSystem:
         plt.savefig(save_path)
         plt.close()
 
-    def save_results(self):
+    def saveResults(self):
         """
         輸出所有 CSV 報表
         """

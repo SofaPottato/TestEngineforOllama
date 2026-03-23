@@ -2,16 +2,17 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="b1c131e8-9ce6-42f7-8e53-2f12989c6684" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/config/llm_config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/config/llm_config.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/prompts.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/config/prompts.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/main_LLM.py" beforeDir="false" afterPath="$PROJECT_DIR$/main_LLM.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/Evaluate.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/Evaluate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/LLMResultProcessor.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/LLMResultProcessor.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/LLM_Engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/LLM_Engine.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/Pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/Pipeline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/PromptManager.py" beforeDir="false" afterPath="$PROJECT_DIR$/prompt_modules/PromptManager.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/modules/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/llm_config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/configs/llm_config.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/prompt_output/test_manual_prompts.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/prompt_output/test_manual_prompts.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/Evaluate.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/Evaluate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/LLMResultProcessor.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/LLMResultProcessor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/LLM_Engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/LLMEngine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/Pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/Pipeline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/async_ollama_engine.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/asyncOllamaEngine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/llm_inference_20260318_2313.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/main_LLM.py" beforeDir="false" afterPath="$PROJECT_DIR$/call_LLM.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,7 +62,7 @@
     "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "editor.preferences.fonts.default",
+    "settings.editor.selected.configurable": "editor.preferences.completion",
     "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
@@ -92,6 +93,8 @@
       <workItem from="1773370272492" duration="380000" />
       <workItem from="1773370663671" duration="26000" />
       <workItem from="1773370698730" duration="3101000" />
+      <workItem from="1774239509973" duration="1185000" />
+      <workItem from="1774240833530" duration="1036000" />
     </task>
     <servers />
   </component>

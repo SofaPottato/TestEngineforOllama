@@ -4,9 +4,7 @@ import re
 import pandas as pd
 from pathlib import Path
 from typing import List, Dict, Any
-import json
-# 引入非同步引擎
-from .async_ollama_engine import MultiModelAsyncEngine
+from .asyncOllamaEngine import MultiModelAsyncEngine
 
 class InferenceManager:
     def __init__(self, config: Dict[str, Any]):
@@ -14,28 +12,29 @@ class InferenceManager:
         self.cfg = config
         
         # 1. 模型與路徑設定
-        self.models = config.get("selected_models", ["gemma3:270m"])
-        paths_cfg = config.get("paths", {})
-        self.output_dir = Path(paths_cfg.get('mainOutputDir', './data/llm_output/'))
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        self.jsonl_output_path = self.output_dir / "raw_inference_results_temp.csv"
-        self.csv_output_path = self.output_dir / "raw_inference_results.csv"
-        
+        self.models = config.get("selectedModels", ["gemma3:270m"])
+        pathsCfg = config.get("paths", {})
+        self.outputDir = Path(pathsCfg.get('mainOutputDir', './data/llm_output/'))
+        self.outputDir.mkdir(parents=True, exist_ok=True)
+        self.rawCsvOutputPath = self.outputDir / "raw_inference_results_temp.csv"
+        self.csvOutputPath = Path(pathsCfg.get('rawOutputPath', './data/raw_output/'))
+        self.singlePromptDir = Path(pathsCfg.get('singlePromptOutputDir', './data/test_output/'))
+        self.singlePromptDir.mkdir(parents=True, exist_ok=True)
         # 2. 批次處理設定 (從你原本的 config 讀取)
-        pair_settings = config.get('pair_settings', {})
-        self.pair_number = pair_settings.get('pair_number', 10)
-        self.task_template = config.get("task_template", "{title}\n{abstract}\n{items_content}")
+        pairSettings = config.get('pairSettings', {})
+        self.pairNumber = pairSettings.get('pairNumbers', 10)
+        self.taskTemplate = config.get("taskTemplate", "{title}\n{abstract}\n{items_content}")
         
         # 3. 準備傳給 Async Engine 的設定
-        api_config = config.get("ollama_server", {"url": "http://localhost:11434/api/chat", "timeout": 1800})
-        llm_options = config.get("llm_hyperparameters", {"temperature": 0})
-        exec_cfg = config.get("execution_settings", {})
-        exec_settings = {
-            'concurrency_per_model': exec_cfg.get("model_concurrent_requests", 12),
-            'output_file': str(self.jsonl_output_path)
+        apiConfig = config.get("ollamaServer", {"url": "http://localhost:11434/api/chat", "timeout": 1800})
+        llmOptions = config.get("llmHyperparameters", {"temperature": 0})
+        executionCfg = config.get("executionSettings", {})
+        executionSettings = {
+            'concurrencyPerModel': executionCfg.get("modelConcurrentRequests", 12),
+            'outputFile': str(self.rawCsvOutputPath)
         }
         
-        self.engine = MultiModelAsyncEngine(api_config, llm_options, exec_settings)
+        self.engine = MultiModelAsyncEngine(apiConfig, llmOptions, executionSettings)
 
     def run(self, df: pd.DataFrame, prompts: List[Dict[str, str]]) -> str:
         """主執行入口"""
@@ -46,11 +45,11 @@ class InferenceManager:
             logging.error("❌ 無法生成任何任務。")
             return ""
 
-        if self.jsonl_output_path.exists():
-            self.jsonl_output_path.unlink() # 清理舊的暫存檔
+        if self.rawCsvOutputPath.exists():
+            self.rawCsvOutputPath.unlink() # 清理舊的暫存檔
 
         logging.info(f"🚀 交接給非同步引擎執行 (總任務批次數: {len(tasks)})...")
-        results = asyncio.run(self.engine.run_tasks(tasks))
+        results = asyncio.run(self.engine.runTasks(tasks))
         
         if not results:
             logging.error("❌ 推論引擎回傳空結果。")
@@ -79,9 +78,9 @@ class InferenceManager:
                     'True_Label': row.get('Relation_Type', row.get('Label', ''))
                 })
             
-            # 切分 Batch (依據 pair_number，例如每 10 個一組)
-            for i in range(0, len(pairs_list), self.pair_number):
-                batch_pairs = pairs_list[i : i + self.pair_number]
+            # 切分 Batch (依據 pairNumbers，例如每 10 個一組)
+            for i in range(0, len(pairs_list), self.pairNumber):
+                batch_pairs = pairs_list[i : i + self.pairNumber]
                 base_batches.append({
                     'pmid': pmid,
                     'title': title,
@@ -103,11 +102,11 @@ class InferenceManager:
                     
                     # 套用 YAML 中的 Template
                     try:
-                        user_text = self.task_template.format(
-                            title=batch['title'],
-                            abstract=batch['abstract'],
-                            items_content=items_content
-                        )
+                        # 🌟 修正：將原本的 try-except 區塊替換成連續的 .replace()
+                        user_text = self.taskTemplate
+                        user_text = user_text.replace('{title}', str(batch['title']))
+                        user_text = user_text.replace('{abstract}', str(batch['abstract']))
+                        user_text = user_text.replace('{items_content}', items_content)
                     except KeyError as e:
                         logging.error(f"Template 格式錯誤，缺少對應的 Key: {e}")
                         user_text = f"Title: {batch['title']}\nAbstract: {batch['abstract']}\nItems:\n{items_content}"
@@ -124,29 +123,36 @@ class InferenceManager:
         return tasks
 
     def _parse_batch_response(self, text: str, batch_size: int) -> List[str]:
-        """[與你原版相同] 解析 LLM 回傳的 Item List"""
         clean_results = ["Parse_Error"] * batch_size
         if not text or "Error:" in text:
             return clean_results
 
-        for i in range(1, batch_size + 1):
-            # 你的原始 Regex 邏輯
-            pattern = re.compile(rf"(?:Item|No\.?|^|\n)\s*\**{i}\**[^a-zA-Z0-9]*(Yes|No)", re.IGNORECASE)
-            match = pattern.search(text)
-            if match:
-                clean_results[i-1] = match.group(1).title() # Yes/No
+        # 根據 Item 切分段落，避免找錯數字
+        # 假設 LLM 有照順序輸出，我們可以簡單地分段
+        blocks = re.split(r'(?:Item|No\.?)\s*\**\d+\**', text, flags=re.IGNORECASE)
+        blocks = blocks[1:] 
+
+        for i in range(batch_size):
+            if i < len(blocks):
+                block_text = blocks[i].lower()
+                # 較寬鬆的 Fallback 掃描
+                if 'yes' in block_text or 'cid' in block_text:
+                    clean_results[i] = 'Yes'
+                elif 'no' in block_text or 'none' in block_text:
+                    clean_results[i] = 'No'
+        
         return clean_results
 
     def _parse_and_convert_to_csv(self) -> str:
         """讀取暫存 CSV，套用 Regex 解析，展開成最終的 DataFrame 並存成 CSV"""
         logging.info("==== [Step 3.2] Parsing LLM Outputs & Building CSV ====")
         try:
-            if not self.jsonl_output_path.exists():
-                logging.error(f"❌ 找不到暫存結果檔案: {self.jsonl_output_path}")
+            if not self.rawCsvOutputPath.exists():
+                logging.error(f"❌ 找不到暫存結果檔案: {self.rawCsvOutputPath}")
                 return ""
 
             # 🌟 修正 1：改用 read_csv 讀取我們剛剛存的暫存檔
-            df_temp = pd.read_csv(str(self.jsonl_output_path), encoding='utf-8-sig')
+            df_temp = pd.read_csv(str(self.rawCsvOutputPath), encoding='utf-8-sig')
             results = []
 
             # 遍歷每一筆完成的任務
@@ -191,10 +197,19 @@ class InferenceManager:
             final_df = pd.DataFrame(results)
             final_df = final_df.sort_values(['Model', 'Prompt_ID', 'Data_ID'])
             
-            csv_path_str = str(self.csv_output_path)
+            csv_path_str = str(self.csvOutputPath)
             final_df.to_csv(csv_path_str, index=False, encoding='utf-8-sig')
             
+            for prompt_id, group_df in final_df.groupby('Prompt_ID'):
+                # 把 Prompt ID 中不能當檔名的特殊字元替換掉
+                safe_name = str(prompt_id).replace(":", "_").replace("+", "_").replace(" ", "_").replace("/", "_")
+                single_out_path = self.singlePromptDir / f"{safe_name}_result.csv"
+                # 額外存一份單獨的 CSV
+                group_df.to_csv(single_out_path, index=False, encoding='utf-8-sig')
+            
+            logging.info(f"✅ 額外儲存完成！單獨 Prompt 結果已放入: {self.singlePromptDir}")
             logging.info(f"✅ 解析完成！格式化資料已儲存至: {csv_path_str}")
+            
             return csv_path_str
             
         except Exception as e:
