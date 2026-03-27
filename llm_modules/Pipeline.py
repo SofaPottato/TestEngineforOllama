@@ -8,8 +8,8 @@ from .LLMEngine import InferenceManager
 from .OutputParser import RegexOutputParser
 from .LLMResultProcessor import LLMResultProcessor
 from .Evaluate import LLMEvaluationSystem
-from .schemas import DataLoadError, TaskBuildError, InferenceError, ParsingError, LLMAppConfig 
-
+from .schemas import DataLoadError, TaskBuildError, InferenceError, ParsingError, LLMAppConfig, PipelineError
+import re
 
 class ExperimentPipeline:
     def __init__(self, config: LLMAppConfig):
@@ -41,7 +41,7 @@ class ExperimentPipeline:
         
     def getCompletedTasks(self) -> set:
         """
-        讀取暫存檔，取得已完成的任務指紋 (Model, PromptID, UserPrompt)
+        讀取暫存檔，取得已完成的任務身分證 (task_id)
         """
         completed = set()
         if not self.rawTempPath.exists():
@@ -50,13 +50,17 @@ class ExperimentPipeline:
         try:
             tempDf = pd.read_csv(str(self.rawTempPath), encoding='utf-8-sig')
             
-            # 確保檔案沒有壞掉且具備需要的欄位
-            if all(col in tempDf.columns for col in ['model', 'promptID', 'userPrompt']):
-                for _, row in tempDf.iterrows():
-                    onlyID = (str(row['model']), str(row['promptID']), str(row['userPrompt']))
-                    completed.add(onlyID)
+            # 優先檢查是否有我們新加入的強型別 task_id 欄位
+            if 'task_id' in tempDf.columns:
+                # 直接把整個欄位轉成 Set，效能極高！
+                # 去除空值 (NaN) 並轉為字串
+                valid_ids = tempDf['task_id'].dropna().astype(str).str.strip()
+                completed.update(valid_ids.tolist())
+            else:
+                # 🛡️ 防呆：如果讀到的是非常舊的暫存檔（沒有 task_id 欄位）
+                logging.warning("⚠️ 發現的暫存檔為舊版格式（缺少 task_id），將無法使用精準斷點續傳。")
                     
-            logging.info(f"♻️ 發現斷點紀錄！已載入 {len(completed)} 筆完成的任務。")
+            logging.info(f"♻️ 發現斷點紀錄！已載入 {len(completed)} 筆完成的任務身分證。")
         except Exception as e:
             logging.warning(f"⚠️ 讀取斷點紀錄失敗，將忽略舊紀錄重新開始: {e}")
             
@@ -84,7 +88,7 @@ class ExperimentPipeline:
         if tasksList:
             logging.info(f"==== [Step 3] Running LLM Inference ({len(tasksList)} tasks remaining) ====")
             engine = InferenceManager(
-                rawOutputPath=self.pathsConfig.rawOutputPath, 
+                rawOutputPath=self.rawTempPath, 
                 apiUrl=self.config.apiUrl,
                 timeout=self.config.timeout,
                 llmOptions=self.config.llmOptions,
@@ -92,8 +96,10 @@ class ExperimentPipeline:
             )
             rawOutputStrPath = engine.dispatchTasksToAsyncEngine(tasksList)
             
-            if not rawOutputStrPath or not os.path.exists(rawOutputStrPath):
-                raise InferenceError("推論失敗：沒有產生暫存檔案。")
+            try:
+                rawOutputStrPath = engine.dispatchTasksToAsyncEngine(tasksList)
+            except Exception as e:
+                raise InferenceError(f"推論失敗，模型連線異常: {e}") from e
         else:
             logging.info("==== [Step 3] All tasks already completed! Skipping Inference. ====")
 
@@ -137,7 +143,11 @@ class ExperimentPipeline:
         if not self.dataPath or not os.path.exists(self.dataPath):
             raise DataLoadError(f"找不到指定的資料集檔案: {self.dataPath}")
         
-        df = pd.read_csv(self.dataPath)
+        df = pd.read_csv(
+                self.dataPath, 
+                encoding='utf-8-sig',
+                on_bad_lines='warn' # 遇到壞行時警告而不是直接當掉卡死
+        )
         if self.config.testLimits is not None:
             limit = self.config.testLimits
             df = df.head(limit)

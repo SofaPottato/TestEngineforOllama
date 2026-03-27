@@ -1,7 +1,7 @@
 import logging
 import pandas as pd
-from typing import List, Dict
-from .schemas import LLMTask, TaskBuildError
+from typing import List, Dict, Any
+from .schemas import LLMTask, TaskBuildError # 確保有載入你寫的 Schema
 
 class TaskBuilder:
     def __init__(
@@ -10,6 +10,7 @@ class TaskBuilder:
         pairNumber: int,
         taskTemplate: str,
         itemTemplate: str = "Item {i}: Chemical: {e1} | Disease: {e2}\n",
+        idCol: str = 'ID',              # 🌟 新增：你的原生 ID 欄位名稱 (如果是其他名字請修改這裡)
         groupByCol: str = 'PMID',
         titleCol: str = 'Title',
         abstractCol: str = 'Abstract',
@@ -22,6 +23,7 @@ class TaskBuilder:
         self.pairNumber = pairNumber
         self.taskTemplate = taskTemplate
         self.itemTemplate = itemTemplate
+        self.idCol = idCol              # 🌟 註冊 ID 欄位
         self.groupByCol = groupByCol
         self.titleCol = titleCol
         self.abstractCol = abstractCol
@@ -39,7 +41,11 @@ class TaskBuilder:
             completedTasks = set()
             
         if self.groupByCol not in df.columns:
-            raise TaskBuildError(f"找不到分組欄位 '{self.groupByCol}'，請檢查原始資料的欄位名稱！")
+            raise TaskBuildError(f"找不到分組欄位 '{self.groupByCol}'，請檢查原始資料！")
+            
+        # 🌟 防呆：檢查有沒有你說的 ID 欄位
+        if self.idCol not in df.columns:
+            logging.warning(f"⚠️ 找不到指定的 ID 欄位 '{self.idCol}'，將暫時使用 DataFrame Index 代替。")
 
         grouped = df.groupby(self.groupByCol)
         baseBatchesList = []
@@ -52,6 +58,7 @@ class TaskBuilder:
             for idx, row in group.iterrows():
                 pairsList.append({
                     'orig_idx': idx,
+                    'Data_ID': str(row.get(self.idCol, idx)), # 🌟 抓取原生 ID，若無則退回 index
                     'E1_Name': row.get(self.e1Col, ''),
                     'E2_Name': row.get(self.e2Col, ''),
                     'True_Label': row.get(self.labelCol, row.get(self.fallbackLabelCol, ''))
@@ -74,21 +81,28 @@ class TaskBuilder:
                 sysPrompt = promptConfigDict.get('promptText', promptConfigDict.get('text', ''))
                 
                 for batch in baseBatchesList:
-                    itemsContent = ""
+                    # ==========================================
+                    # 🌟 終極斷點邏輯：使用 [模型] + [PromptID] + [首筆原生ID]
+                    # ==========================================
+                    first_item_id = batch['batchPairsList'][0]['Data_ID']
+                    current_task_id = f"{model}::{promptID}::{first_item_id}"
+                    
+                    if current_task_id in completedTasks:
+                        skipped_count += 1
+                        continue # 完美達成逐筆跳過！
+                    
+                    pairsContent = ""
                     for i, pair in enumerate(batch['batchPairsList'], 1):
-                        itemsContent += self.itemTemplate.format(
+                        pairsContent += self.itemTemplate.format(
                             i=i, e1=pair['E1_Name'], e2=pair['E2_Name']
                         )
                     
                     userText = self.taskTemplate.replace('{title}', str(batch['title']))
                     userText = userText.replace('{abstract}', str(batch['abstract']))
-                    userText = userText.replace('{itemsContent}', itemsContent)
+                    userText = userText.replace('{pairsContent}', pairsContent)
                     
-                    fingerprint = (str(model), str(promptID), str(userText))
-                    if fingerprint in completedTasks:
-                        skipped_count += 1
-                        continue 
                     task_obj = LLMTask(
+                        task_id=current_task_id, # 🌟 寫入終極身分證
                         model=model,
                         promptID=promptID,
                         sysPrompt=sysPrompt,

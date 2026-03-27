@@ -33,7 +33,7 @@ class RegexOutputParser:
         text = "\n" + text.strip()
         
         # 3. 分隔符號必須以 \n (換行) 開頭，徹底避免把答案的 "No" 吃掉
-        blocksList = re.split(r'\n\s*(?:Item\s+|No\.?\s*)?\d+\s*[:.)-]', text, flags=re.IGNORECASE)
+        blocksList = re.split(r'\n\s*(?:\s+|No\.?\s*)?\d+\s*[:.)-]', text, flags=re.IGNORECASE)
         
         # 移除 split 產生的第一個空字串
         blocksList = blocksList[1:]

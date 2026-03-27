@@ -41,9 +41,12 @@ class LLMResultProcessor:
         self.rawDf['Pred_Label'] = self.rawDf['Pred_Label'].apply(self.parseResponse)
         
         logging.info("Processing True Labels")
-        self.rawDf['True_Label'] = self.rawDf['True_Label'].apply(
-            lambda x: 1 if str(x).strip().lower() == 'cid' else 0
-        )
+        self.rawDf['True_Label'] = self.rawDf['True_Label'].apply(self._convertTrueLabel)
+
+        # 轉換後檢查有沒有未知值
+        unknown_count = (self.rawDf['True_Label'] == -1).sum()
+        if unknown_count > 0:
+            logging.warning(f"⚠️ 有 {unknown_count} 筆 True_Label 無法識別，這些樣本將在評估時被自動排除")
 
         logging.info("Creating Feature Names")
         self.rawDf['Feature_Name'] = self.rawDf['Model'].astype(str) + "_" + self.rawDf['promptID'].astype(str)
@@ -75,6 +78,16 @@ class LLMResultProcessor:
             logging.error(f"❌ Error reading CSV: {e}")
             return False
 
+    def _convertTrueLabel(self, x) -> int:
+        val = str(x).strip().lower()
+        if val == 'cid':
+            return 1
+        elif val in ['0', 'false', 'none', 'negative']:
+            return 0
+        else:
+            logging.warning(f"⚠️ 未預期的 True_Label 值: '{x}'，將標記為 -1")
+            return -1  # 未知值標記為 -1，不會被當成負類
+        
     def parseResponse(self, text):
         """
         [Private] 解析單一回應字串

@@ -22,14 +22,17 @@ class AsyncOllamaClient:
         self.llmOptions = llmOptions
 
         limits = httpx.Limits(max_keepalive_connections=100, max_connections=100)
-        self.client = httpx.AsyncClient(limits=limits, timeout=self.timeout)
+        self.client = httpx.AsyncClient(
+            limits=limits,
+            timeout=httpx.Timeout( self.timeout,connect=30.0)
+        )
 
     # Tenacity 重試裝飾器
     @retry(
         stop=stop_after_attempt(3),
         wait=wait_exponential(multiplier=1, min=1, max=10),
         retry=retry_if_exception_type((httpx.RequestError, httpx.HTTPStatusError, httpx.ReadTimeout)),
-        reraise=False # 重試 3 次都失敗後，回傳 None 交給外層處理
+        reraise=True 
     )
     async def generate(self, modelName: str, sysPrompt: str, userPrompt: str):
         payload = {
@@ -72,9 +75,17 @@ class MultiModelAsyncEngine:
 
         self.client = AsyncOllamaClient(apiUrl=apiUrl, timeout=timeout, llmOptions=llmOptions)
         self.semaphores = defaultdict(lambda: asyncio.Semaphore(self.concurrencyPerModel))
-        
+        self.existingTaskIds: set = self._loadExistingTaskIds()
         self.debugPrintedModels = set()
         self.fileLock = asyncio.Lock()
+    def _loadExistingTaskIds(self) -> set:
+        if not os.path.isfile(self.outputFile):
+            return set()
+        try:
+            df = pd.read_csv(self.outputFile, usecols=['task_id'], encoding='utf-8-sig')
+            return set(df['task_id'].dropna().astype(str))
+        except Exception:
+            return set()
         
     async def processSingleTask(self, task: Dict[str, Any]) -> Dict[str, Any]:
         """處理單一任務批次，並根據模型名稱進入對應的排隊閘門"""
@@ -84,14 +95,17 @@ class MultiModelAsyncEngine:
             systemPrompt = task.get('sysPrompt', '')
             userPrompt = task.get('userPrompt', '')
 
-
+            task_id = str(task.get('task_id', ''))
             if model not in self.debugPrintedModels:
                 logging.info(f"\n📢 [Debug] Model '{model}' 已啟動專屬排程，最大併發限制: {self.concurrencyPerModel}")
                 self.debugPrintedModels.add(model)
 
 
-            rawOutput = await self.client.generate(model, systemPrompt, userPrompt)
-            
+            try:
+                rawOutput = await self.client.generate(model, systemPrompt, userPrompt)
+            except Exception as e:
+                logging.error(f"❌ 任務 {task_id} 徹底失敗: {e}")
+                rawOutput = "Error: Max retries exceeded or connection failed"
 
             if rawOutput is None:
                 rawOutput = "Error: Max retries exceeded or connection failed"
@@ -105,6 +119,7 @@ class MultiModelAsyncEngine:
             # 定義 CSV 的欄位與要寫入的資料
             row_data = {
                 "timestamp": completedTask['timestamp'],
+                "task_id": task.get('task_id', ''),
                 "model": completedTask.get('model', ''),
                 "promptID": completedTask.get('promptID', ''),
                 "systemPrompt": completedTask.get('sysPrompt', ''),
@@ -112,8 +127,12 @@ class MultiModelAsyncEngine:
                 "rawOutput": rawOutput,
                 "batchData": batchDataStr 
             }
-
+            if task_id in self.existingTaskIds:
+                logging.info(f"⏭️ task_id {task_id} 已存在於檔案，跳過")
+                return task  # 直接回傳，不重跑
+        
             async with self.fileLock:
+                self.existingTaskIds.add(task_id)
                 fileExists = os.path.isfile(self.outputFile)
                 with open(self.outputFile, 'a', encoding='utf-8-sig', newline='') as f:
                     writer = csv.DictWriter(f, fieldnames=row_data.keys())
@@ -144,7 +163,7 @@ class MultiModelAsyncEngine:
                 unit="batch",
                 mininterval=2.0,      
                 dynamic_ncols=True,   
-                ascii=True            
+                ascii=True,
             )
         
         await self.client.close()

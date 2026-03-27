@@ -8,13 +8,13 @@ paths:
   dataPath: "data/bcvcdr_raw/BCVCDR_Processed.csv"
   promptsPath: "data/prompt_output/test_auto_prompts.csv" # 從 Prompt 模組讀取組合好的清單
   # --- 輸出路徑 (Outputs)(可自訂) ---
-  mainOutputDir: "data/test_V5/"
-  singlePromptOutputDir: "data/test_V5/singleOutput" #裡面放單獨prompt的結果
-  evalDataDir: "data/test_V5"       #放圖表的資料夾
-  rawTempOutputPath: "data/test_V5/raw.csv" #佔存檔
-  rawOutputPath: "data/test_V5/raw.csv"         #生的                
-  resultOutputPath: "data/test_V5/result.csv"      #放處理過的
-  mergedLlmOutputPath: "data/test_V5/test_merge.csv"     #所有欄位總成(ID/titlr/abstract/entity/relation/processed/relation) 
+  mainOutputDir: "data/test_V8/"
+  singlePromptOutputDir: "data/test_V8/singleOutput" #裡面放單獨prompt的結果
+  evalDataDir: "data/test_V8"       #放圖表的資料夾
+  rawTempOutputPath: "data/test_V8/Temp.csv" #佔存檔
+  rawOutputPath: "data/test_V8/raw.csv"         #生的                
+  resultOutputPath: "data/test_V8/result.csv"      #放處理過的
+  mergedLlmOutputPath: "data/test_V8/test_merge.csv"     #所有欄位總成(ID/titlr/abstract/entity/relation/processed/relation) 
 
 
 # ================= 2. LLM 模型與連線設定 =================
@@ -28,7 +28,7 @@ ollamaServer:
   url: "http://localhost:11434/api/chat"
   timeout: 600
 
-llmHyperparameters:
+llmOptions:
   temperature: 0      
   num_predict: -1     
   num_ctx: 8192
@@ -49,13 +49,13 @@ taskTemplate: |
   Title: {title}
   Abstract: {abstract}
 
-  Task: Determine if the Chemical induces the Disease for the following items based strictly on the text.
+  Task: Determine if the Chemical induces the Disease for the following pairs based strictly on the text.
 
-  Items to analyze:
-  {itemsContent}
+  pairs to analyze:
+  {pairsContent}
 
   IMPORTANT OUTPUT RULES:
   1. Output ONLY a numbered list.
-  2. Format: "Item X: Yes" or "Item X: No".
+  2. Format: "Pair X: Yes" or "Pair X: No".
   3. Do NOT provide explanations.
   4. Do NOT use Markdown formatting.

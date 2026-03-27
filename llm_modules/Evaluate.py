@@ -157,7 +157,7 @@ class LLMEvaluationSystem:
 
         plt.savefig(save_path, bbox_inches='tight')
         plt.close()
-
+        
     def saveResults(self):
         """
         輸出所有 CSV 報表

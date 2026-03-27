@@ -33,10 +33,9 @@ class LLMAppConfig(BaseModel):
     concurrencyPerModel: int = Field(default=8, description="每個模型的最大非同步併發數")
     timeout: int = Field(default=1800, description="API 請求超時時間(秒)")
     llmOptions: Dict[str, Any] = Field(default_factory=lambda: {"temperature": 0}, description="LLM 推論參數")
-    selectedModels: List[str] = Field(default_factory=lambda: ["llama3.2:1b"])
     pairSettings: PairConfig = Field(default_factory=PairConfig)
     taskTemplate: str = Field(
-        default="{title}\n{abstract}\n{itemsContent}", 
+        default="{title}\n{abstract}\n{pairsContent}", 
         description="組裝 Prompt 的預設文字模板"
     )
 
@@ -72,6 +71,7 @@ class LLMTask:
     LLM 推論任務的標準資料結構。
     告別 Dict[str, Any]，讓每個欄位都有明確的家。
     """
+    task_id: str
     model: str
     promptID: str
     sysPrompt: str
