@@ -1,0 +1,123 @@
+﻿Data_ID,PMID,Model,promptID,E1,E2,True_Label,Pred_Label,Raw_Output
+0,8701013,gemma3:270m,S2A01 + RE201,famotidine,delirium,cid,-1,"1.  Pair 1: Famotidine | Delirium
+2.  Pair 2: Famotidine | Ulcers
+"
+1,8701013,gemma3:270m,S2A01 + RE201,famotidine,ulcers,none,-1,"1.  Pair 1: Famotidine | Delirium
+2.  Pair 2: Famotidine | Ulcers
+"
+2,439781,gemma3:270m,S2A01 + RE201,indomethacin,hypotension,cid,-1,"1.  Indomethacin induced hypotension in sodium and volume depleted rats.
+2.  Indomethacin did not change systolic blood pressure (bp) although plasma renin activity was decreased.
+3.  Indomethacin by inhibition of prostaglandin synthesis may diminish the blood pressure maintaining effect of the stimulated renin-angiotensin system in sodium and volume depletion.
+"
+3,439781,gemma3:270m,S2A01 + RE201,sodium,hypotension,none,0,"1.  Indomethacin induced hypotension in sodium and volume depleted rats.
+2.  Indomethacin did not change systolic blood pressure (bp) although plasma renin activity was decreased.
+3.  Indomethacin by inhibition of prostaglandin synthesis may diminish the blood pressure maintaining effect of the stimulated renin-angiotensin system in sodium and volume depletion.
+"
+4,439781,gemma3:270m,S2A01 + RE201,idm,hypotension,cid,-1,"1.  Indomethacin induced hypotension in sodium and volume depleted rats.
+2.  Indomethacin did not change systolic blood pressure (bp) although plasma renin activity was decreased.
+3.  Indomethacin by inhibition of prostaglandin synthesis may diminish the blood pressure maintaining effect of the stimulated renin-angiotensin system in sodium and volume depletion.
+"
+5,439781,gemma3:270m,S2A01 + RE201,prostaglandin,hypotension,none,-1,"1.  Indomethacin induced hypotension in sodium and volume depleted rats.
+2.  Indomethacin did not change systolic blood pressure (bp) although plasma renin activity was decreased.
+3.  Indomethacin by inhibition of prostaglandin synthesis may diminish the blood pressure maintaining effect of the stimulated renin-angiotensin system in sodium and volume depletion.
+"
+6,439781,gemma3:270m,S2A01 + RE201,angiotensin,hypotension,none,-1,"1.  Indomethacin induced hypotension in sodium and volume depleted rats.
+2.  Indomethacin did not change systolic blood pressure (bp) although plasma renin activity was decreased.
+3.  Indomethacin by inhibition of prostaglandin synthesis may diminish the blood pressure maintaining effect of the stimulated renin-angiotensin system in sodium and volume depletion.
+"
+7,22836123,gemma3:270m,S2A01 + RE201,tacrolimus,scleroderma renal crisis,none,0,"1.  Tacrolimus and corticosteroids are both known to cause scleroderma renal crisis.
+2.  Tacrolimus is a medication used to treat scleroderma renal crisis.
+3.  Tacrolimus is a medication used to treat src.
+"
+8,22836123,gemma3:270m,S2A01 + RE201,tacrolimus,src,none,-1,"1.  Tacrolimus and corticosteroids are both known to cause scleroderma renal crisis.
+2.  Tacrolimus is a medication used to treat scleroderma renal crisis.
+3.  Tacrolimus is a medication used to treat src.
+"
+9,22836123,gemma3:270m,S2A01 + RE201,tacrolimus,systemic sclerosis,cid,-1,"1.  Tacrolimus and corticosteroids are both known to cause scleroderma renal crisis.
+2.  Tacrolimus is a medication used to treat scleroderma renal crisis.
+3.  Tacrolimus is a medication used to treat src.
+"
+0,8701013,llama3.2:1b,S2A01 + RE201,famotidine,delirium,cid,0,"1: No
+2: No
+3: No
+4: No
+5: No
+6: No"
+1,8701013,llama3.2:1b,S2A01 + RE201,famotidine,ulcers,none,0,"1: No
+2: No
+3: No
+4: No
+5: No
+6: No"
+2,439781,llama3.2:1b,S2A01 + RE201,indomethacin,hypotension,cid,0,"1: No
+2: No
+3: No
+4: No
+5: No"
+3,439781,llama3.2:1b,S2A01 + RE201,sodium,hypotension,none,0,"1: No
+2: No
+3: No
+4: No
+5: No"
+4,439781,llama3.2:1b,S2A01 + RE201,idm,hypotension,cid,0,"1: No
+2: No
+3: No
+4: No
+5: No"
+5,439781,llama3.2:1b,S2A01 + RE201,prostaglandin,hypotension,none,0,"1: No
+2: No
+3: No
+4: No
+5: No"
+6,439781,llama3.2:1b,S2A01 + RE201,angiotensin,hypotension,none,0,"1: No
+2: No
+3: No
+4: No
+5: No"
+7,22836123,llama3.2:1b,S2A01 + RE201,tacrolimus,scleroderma renal crisis,none,0,"1: No
+2: No
+3: No"
+8,22836123,llama3.2:1b,S2A01 + RE201,tacrolimus,src,none,0,"1: No
+2: No
+3: No"
+9,22836123,llama3.2:1b,S2A01 + RE201,tacrolimus,systemic sclerosis,cid,0,"1: No
+2: No
+3: No"
+0,8701013,phi3:latest,S2A01 + RE201,famotidine,delirium,cid,-1,"Pair 1: Yes
+Pair 2: No"
+1,8701013,phi3:latest,S2A01 + RE201,famotidine,ulcers,none,-1,"Pair 1: Yes
+Pair 2: No"
+2,439781,phi3:latest,S2A01 + RE201,indomethacin,hypotension,cid,1,"1: Pair indomethacin | Disease: hypotension - Yes
+2: Pair sodium | Disease: hypotension - No
+3: Pair idm (indomethacin) | Disease: hypotension - Yes
+4: Pair prostaglandin | Disease: hypotension - No
+5: Pair angiotensin | Disease: hypotension - No"
+3,439781,phi3:latest,S2A01 + RE201,sodium,hypotension,none,0,"1: Pair indomethacin | Disease: hypotension - Yes
+2: Pair sodium | Disease: hypotension - No
+3: Pair idm (indomethacin) | Disease: hypotension - Yes
+4: Pair prostaglandin | Disease: hypotension - No
+5: Pair angiotensin | Disease: hypotension - No"
+4,439781,phi3:latest,S2A01 + RE201,idm,hypotension,cid,1,"1: Pair indomethacin | Disease: hypotension - Yes
+2: Pair sodium | Disease: hypotension - No
+3: Pair idm (indomethacin) | Disease: hypotension - Yes
+4: Pair prostaglandin | Disease: hypotension - No
+5: Pair angiotensin | Disease: hypotension - No"
+5,439781,phi3:latest,S2A01 + RE201,prostaglandin,hypotension,none,0,"1: Pair indomethacin | Disease: hypotension - Yes
+2: Pair sodium | Disease: hypotension - No
+3: Pair idm (indomethacin) | Disease: hypotension - Yes
+4: Pair prostaglandin | Disease: hypotension - No
+5: Pair angiotensin | Disease: hypotension - No"
+6,439781,phi3:latest,S2A01 + RE201,angiotensin,hypotension,none,0,"1: Pair indomethacin | Disease: hypotension - Yes
+2: Pair sodium | Disease: hypotension - No
+3: Pair idm (indomethacin) | Disease: hypotension - Yes
+4: Pair prostaglandin | Disease: hypotension - No
+5: Pair angiotensin | Disease: hypotension - No"
+7,22836123,phi3:latest,S2A01 + RE201,tacrolimus,scleroderma renal crisis,none,-1,"Pair 1: Yes
+Pair 2: Yes
+Pair 3: No"
+8,22836123,phi3:latest,S2A01 + RE201,tacrolimus,src,none,-1,"Pair 1: Yes
+Pair 2: Yes
+Pair 3: No"
+9,22836123,phi3:latest,S2A01 + RE201,tacrolimus,systemic sclerosis,cid,-1,"Pair 1: Yes
+Pair 2: Yes
+Pair 3: No"

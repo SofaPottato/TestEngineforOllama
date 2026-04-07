@@ -6,21 +6,17 @@
 paths:
   # --- 輸入路徑 (Inputs) ---
   dataPath: "data/bcvcdr_raw/BCVCDR_Processed.csv"
-  promptsPath: "data/prompt_output/test_auto_prompts.csv" # 從 Prompt 模組讀取組合好的清單
+  promptCmbPath: "data/prompt_output/test_manual_prompts.csv" # 從 Prompt 模組讀取組合好的清單
   # --- 輸出路徑 (Outputs)(可自訂) ---
-  mainOutputDir: "data/test_V8/"
-  singlePromptOutputDir: "data/test_V8/singleOutput" #裡面放單獨prompt的結果
-  evalDataDir: "data/test_V8"       #放圖表的資料夾
-  rawTempOutputPath: "data/test_V8/Temp.csv" #佔存檔
-  rawOutputPath: "data/test_V8/raw.csv"         #生的                
-  resultOutputPath: "data/test_V8/result.csv"      #放處理過的
-  mergedLlmOutputPath: "data/test_V8/test_merge.csv"     #所有欄位總成(ID/titlr/abstract/entity/relation/processed/relation) 
-
+  rawPromptCmbOutputPath: "data/test_V9/Temp.csv" #佔存檔
+  allPromptsCmbResultPath: "data/test_V9/raw.csv"         #生的
+  singlePromptCmbOutputDir: "data/test_V9/singleOutput" #裡面放單獨prompt的結果
+  promptCmbPartialInfoPath: "data/test_V9/result.csv"      #放處理過的
+  promptCmbFullInfoPath: "data/test_V9/test_merge.csv"     #所有欄位總成(ID/titlr/abstract/entity/relation/processed/relation)
+  promptCmbEvalDir: "data/test_V9/eval"       #放圖表的資料夾  
 
 # ================= 2. LLM 模型與連線設定 =================
-selectedModels:
-  #- "gemma3:270m"
-  - "llama3.2:1b"
+selectedModels: ["gemma3:270m", "llama3.2:1b", "phi3:latest"]
 
 testLimits: 10
 
@@ -36,13 +32,13 @@ llmOptions:
   repeat_penalty: 1.1   
 
 # ================= 3. 執行與批量設定 =================
-executionSettings:
-  modelConcurrentRequests: 12
+
+concurrencyPerModel: 8
+maxConcurrentModels: 1
 
 pairSettings:
   enabled: true
   pairNumbers: 10
-  saveEveryNBatches: 100
 
 # ================= 4. User Prompt 模板 =================
 taskTemplate: |

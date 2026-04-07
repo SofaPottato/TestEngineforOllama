@@ -7,7 +7,8 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Any
 from .schemas import LLMAppConfig
-class LLMConfigManager:
+
+class ReadLLMConfig:
     """專門負責讀取 LLM 設定檔並驗證型別與路徑"""
     def __init__(self, configPath: str):
         # 第一步：讀取原始的 YAML 字典

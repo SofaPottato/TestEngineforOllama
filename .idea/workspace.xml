@@ -5,13 +5,154 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/call_LLM.py" beforeDir="false" afterPath="$PROJECT_DIR$/call_LLM.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/configs/llm_config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/configs/llm_config.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/prompt_output/test_manual_prompts.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/prompt_output/test_manual_prompts.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/Temp.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/test_V8/Temp.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/correctness_heatmap.png" beforeDir="false" afterPath="$PROJECT_DIR$/data/test_V8/correctness_heatmap.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/eval_summary.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/test_V8/eval_summary.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO01___RAR01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO01___RAR03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO01___Role01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO01___Role02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO01___Role03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO01___S2A01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO01___S2A02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO01___S2A03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO02___RAR01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO02___RAR02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO02___RAR03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO02___Role01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO02___Role02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO02___Role03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO02___S2A01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO02___S2A02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO02___S2A03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO03___RAR01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO03___RAR02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO03___RAR03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO03___Role01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO03___Role02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO03___Role03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO03___S2A01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO03___S2A02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO03___S2A03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_RAR01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_RAR02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_RAR03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role01___RAR01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role01___RAR02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role01___RAR03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role01___S2A01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role01___S2A02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role01___S2A03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role02___RAR01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role02___RAR02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role02___RAR03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role02___S2A01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role02___S2A02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role02___S2A03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role03___RAR01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role03___RAR02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role03___RAR03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role03___S2A01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role03___S2A02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_Role03___S2A03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A01___RAR01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A01___RAR02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A01___RAR03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A02___RAR01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A02___RAR02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A02___RAR03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A03___RAR01.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A03___RAR02.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A03___RAR03.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/raw.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/test_V8/raw.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/result.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/test_V8/result.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/samples_to_review.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/test_V8/samples_to_review.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01___RAR01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01___RAR02_result.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01___RAR02_result.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01___RAR03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01___Role01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01___Role02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01___Role03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01___S2A01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01___S2A02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01___S2A03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO02___RAR01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO02___RAR02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO02___RAR03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO02___Role01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO02___Role02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO02___Role03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO02___S2A01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO02___S2A02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO02___S2A03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO03___RAR01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO03___RAR02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO03___RAR03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO03___Role01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO03___Role02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO03___Role03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO03___S2A01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO03___S2A02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO03___S2A03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/RAR01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/RAR02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/RAR03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role01___RAR01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role01___RAR02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role01___RAR03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role01___S2A01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role01___S2A02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role01___S2A03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role02___RAR01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role02___RAR02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role02___RAR03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role02___S2A01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role02___S2A02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role02___S2A03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role03___RAR01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role03___RAR02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role03___RAR03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role03___S2A01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role03___S2A02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role03___S2A03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/Role03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A01___RAR01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A01___RAR02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A01___RAR03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A02___RAR01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A02___RAR02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A02___RAR03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A03___RAR01_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A03___RAR02_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A03___RAR03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A03_result.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/test_V8/test_merge.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/test_V8/test_merge.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/llm_modules/Evaluate.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/Evaluate.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/llm_modules/LLMEngine.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/LLMEngine.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/llm_modules/LLMResultProcessor.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/LLMResultProcessor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/OutputParser.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/OutputParser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/llm_modules/Pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/Pipeline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/llm_modules/asyncOllamaEngine.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/asyncOllamaEngine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/TaskBuilder.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/TaskBuilder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/asyncOllamaEngine.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/OllamaEngine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/schemas.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/llm_modules/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/test_v5_log.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/test_v5_log.log" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -62,22 +203,22 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Python.call_LLM.executor": "Run",
-    "Python.main_LLM.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
-    "ai.playground.ignore.import.keys.banner.in.settings": "true",
-    "git-widget-placeholder": "main",
-    "ignore.virus.scanning.warn.message": "true",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "preferences.lookFeel",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Python.call_LLM.executor&quot;: &quot;Run&quot;,
+    &quot;Python.main_LLM.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
+    &quot;ai.playground.ignore.import.keys.banner.in.settings&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\s0810\Desktop\Main_LLM\prompt_modules" />
@@ -111,6 +252,10 @@
       <workItem from="1774252217088" duration="833000" />
       <workItem from="1774255031854" duration="318000" />
       <workItem from="1774331617234" duration="874000" />
+      <workItem from="1774860282770" duration="688000" />
+      <workItem from="1775051767673" duration="520000" />
+      <workItem from="1775185723962" duration="542000" />
+      <workItem from="1775186799279" duration="611000" />
     </task>
     <task id="LOCAL-00001" summary="3_23change">
       <option name="closed" value="true" />

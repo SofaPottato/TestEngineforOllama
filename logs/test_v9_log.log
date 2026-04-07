@@ -1,0 +1,270 @@
+2026-03-30 11:37:57,480:INFO:📝 Logger initialized. Writing to ./logs\test_v9_log.log
+2026-03-30 11:37:57,480:INFO:Random seed set to 42
+2026-03-30 11:37:57,480:INFO:========================================
+2026-03-30 11:37:57,480:INFO:        Ollama            
+2026-03-30 11:37:57,480:INFO:========================================
+2026-03-30 11:37:57,485:INFO:Initializing ExperimentPipeline()
+2026-03-30 11:37:57,485:INFO:ExperimentPipeline initialized.
+2026-03-30 11:37:57,485:INFO:==== [Step 1] Loading Data & Prompts ====
+2026-03-30 11:37:57,770:WARNING:⚠️test: Using only first 10 pairs.
+2026-03-30 11:37:57,778:INFO:==== [Step 2] Building Tasks ====
+2026-03-30 11:37:57,779:INFO:TaskBuilder Initialized.
+2026-03-30 11:37:57,779:INFO:==== [TaskBuilder] Preparing Batched Tasks ====
+2026-03-30 11:37:57,780:INFO:✅ 成功建構 18 筆需要執行的新任務批次！
+2026-03-30 11:37:57,780:INFO:==== [Step 3] Running LLM Inference (18 tasks remaining) ====
+2026-03-30 11:37:57,781:INFO:Initializing InferenceManager()...
+2026-03-30 11:38:00,522:INFO:📝 Logger initialized. Writing to ./logs\test_v9_log.log
+2026-03-30 11:38:00,523:INFO:Random seed set to 42
+2026-03-30 11:38:00,523:INFO:========================================
+2026-03-30 11:38:00,523:INFO:        Ollama            
+2026-03-30 11:38:00,523:INFO:========================================
+2026-03-30 11:38:00,525:INFO:Initializing ExperimentPipeline()
+2026-03-30 11:38:00,525:INFO:ExperimentPipeline initialized.
+2026-03-30 11:38:00,525:INFO:==== [Step 1] Loading Data & Prompts ====
+2026-03-30 11:38:00,817:WARNING:⚠️test: Using only first 10 pairs.
+2026-03-30 11:38:00,817:INFO:==== [Step 2] Building Tasks ====
+2026-03-30 11:38:00,817:INFO:TaskBuilder Initialized.
+2026-03-30 11:38:00,817:INFO:==== [TaskBuilder] Preparing Batched Tasks ====
+2026-03-30 11:38:00,817:INFO:✅ 成功建構 18 筆需要執行的新任務批次！
+2026-03-30 11:38:00,817:INFO:==== [Step 3] Running LLM Inference (18 tasks remaining) ====
+2026-03-30 11:38:00,817:INFO:Initializing InferenceManager()...
+2026-03-30 11:38:00,894:INFO:==== [LLMEngine] Starting Async Inference ====
+2026-03-30 11:38:00,894:INFO:📄 建立全新暫存檔: data\test_V9\Temp.csv
+2026-03-30 11:38:00,894:INFO:🚀 交接給非同步引擎執行 (總任務批次數: 18)...
+2026-03-30 11:38:00,894:INFO:🚀 開始非同步推論！共 18 筆任務批次。
+2026-03-30 11:38:00,894:INFO:⚙️ 偵測到 3 種模型: gemma3:270m, llama3.2:1b, phi3:latest
+2026-03-30 11:38:00,894:INFO:🔒 允許同時運行的最大模型數量 (maxConcurrentModels): 1
+2026-03-30 11:38:00,894:INFO:⚡ 每個模型最大併發限制 (concurrencyPerModel): 8
+2026-03-30 11:38:00,894:INFO:🔥 模型 [gemma3:270m] 取得執行許可，開始處理 6 筆任務...
+2026-03-30 11:38:00,894:INFO:
+📢 [Debug] Model 'gemma3:270m' 已啟動專屬排程，最大併發限制: 8
+2026-03-30 11:38:03,809:INFO:✅ 模型 [gemma3:270m] 的任務已全數處理完畢，釋放模型許可。
+2026-03-30 11:38:03,810:INFO:🔥 模型 [llama3.2:1b] 取得執行許可，開始處理 6 筆任務...
+2026-03-30 11:38:03,811:INFO:
+📢 [Debug] Model 'llama3.2:1b' 已啟動專屬排程，最大併發限制: 8
+2026-03-30 11:38:04,958:INFO:✅ 模型 [llama3.2:1b] 的任務已全數處理完畢，釋放模型許可。
+2026-03-30 11:38:04,959:INFO:🔥 模型 [phi3:latest] 取得執行許可，開始處理 6 筆任務...
+2026-03-30 11:38:04,959:INFO:
+📢 [Debug] Model 'phi3:latest' 已啟動專屬排程，最大併發限制: 8
+2026-03-30 11:38:14,331:INFO:✅ 模型 [phi3:latest] 的任務已全數處理完畢，釋放模型許可。
+2026-03-30 11:38:14,333:INFO:✅ 推論完成！原始回應 (Raw Output) 已儲存至: data\test_V9\Temp.csv
+2026-03-30 11:38:14,333:INFO:==== [Step 4] Parsing LLM Outputs ====
+2026-03-30 11:38:14,334:INFO:RegexOutputParser Initialized.
+2026-03-30 11:38:14,334:INFO:==== [OutputParser] Parsing LLM Outputs & Building CSV ====
+2026-03-30 11:38:14,346:INFO:✅ 額外儲存完成！單獨 Prompt 結果已放入: data\test_V9\singleOutput
+2026-03-30 11:38:14,346:INFO:✅ 解析完成！格式化資料已儲存至: data\test_V9\raw.csv
+2026-03-30 11:38:14,346:INFO:==== [Step 5] Processing Results ====
+2026-03-30 11:38:14,346:INFO:LLMResultProcessor(inputCsvPath='data\test_V9\raw.csv', outputCsvPath='data\test_V9\result.csv')
+2026-03-30 11:38:14,346:INFO:process(self=<llm_modules.LLMResultProcessor.LLMResultProcessor object at 0x26d50c8f050>)
+2026-03-30 11:38:14,348:INFO:Processing data: data\test_V9\raw.csv
+2026-03-30 11:38:14,348:INFO:Loading Raw CSV Data...
+2026-03-30 11:38:14,349:INFO:Data loaded successfully. Shape: (60, 9)
+2026-03-30 11:38:14,350:INFO:Processing True Labels
+2026-03-30 11:38:14,350:INFO:Creating Feature Names
+2026-03-30 11:38:14,351:INFO:Pivoting table (Long to Wide)
+2026-03-30 11:38:14,359:INFO:Pivot completed. New Shape: (10, 11)
+2026-03-30 11:38:14,361:INFO:Generating rich merged table for human review...
+2026-03-30 11:38:14,372:INFO:   -資訊總成已儲存至: data\test_V9\test_merge.csv
+2026-03-30 11:38:14,372:INFO:✅ Data processed successfully!
+2026-03-30 11:38:14,372:INFO:   - Clean Shape: (10, 11)
+2026-03-30 11:38:14,372:INFO:   - Parse Success Rate: 33/60 (55.0%)
+2026-03-30 11:38:14,373:INFO:   - Clean Pipeline Data Saved to: data\test_V9\result.csv
+2026-03-30 11:38:14,374:INFO:==== [Step 6] Evaluating ====
+2026-03-30 11:38:14,376:INFO:LLMEvaluationSystem(inputCsvPath='data\test_V9\result.csv', df_shape=(10, 11), pred_cols_count=6)
+2026-03-30 11:38:14,377:INFO:🚀 System Initialized. Output directory: data\test_V9
+2026-03-30 11:38:14,427:INFO:Difficulty Analysis Complete. Upper Bound: 80.00% (Found 2 hard samples)
+2026-03-30 11:38:14,427:INFO:============Generating Confusion Matrices============
+2026-03-30 11:38:15,363:INFO:============Generating Correctness Heatmap============
+2026-03-30 11:38:15,714:INFO:✅ All results saved to: data\test_V9
+2026-03-30 11:38:15,715:INFO:實驗全部執行完畢！(Pipeline Completed Successfully!)
+2026-03-30 11:44:52,509:INFO:📝 Logger initialized. Writing to ./logs\test_v9_log.log
+2026-03-30 11:44:52,509:INFO:Random seed set to 42
+2026-03-30 11:44:52,509:INFO:========================================
+2026-03-30 11:44:52,509:INFO:        Ollama            
+2026-03-30 11:44:52,509:INFO:========================================
+2026-03-30 11:44:52,509:INFO:Initializing ExperimentPipeline()
+2026-03-30 11:44:52,509:INFO:ExperimentPipeline initialized.
+2026-03-30 11:44:52,509:INFO:==== [Step 1] Loading Data & Prompts ====
+2026-03-30 11:44:52,801:WARNING:⚠️test: Using only first 10 pairs.
+2026-03-30 11:44:52,801:INFO:==== [Step 2] Building Tasks ====
+2026-03-30 11:44:52,801:INFO:TaskBuilder Initialized.
+2026-03-30 11:44:52,801:INFO:==== [TaskBuilder] Preparing Batched Tasks ====
+2026-03-30 11:44:52,801:INFO:✅ 成功建構 18 筆需要執行的新任務批次！
+2026-03-30 11:44:52,801:INFO:==== [Step 3] Running LLM Inference (18 tasks remaining) ====
+2026-03-30 11:44:52,801:INFO:Initializing InferenceManager()...
+2026-03-30 11:44:52,871:INFO:==== [LLMEngine] Starting Async Inference ====
+2026-03-30 11:44:52,872:INFO:📄 建立全新暫存檔: data\test_V9\Temp.csv
+2026-03-30 11:44:52,872:INFO:🚀 交接給非同步引擎執行 (總任務批次數: 18)...
+2026-03-30 11:44:52,873:INFO:🚀 開始非同步推論！共 18 筆任務批次。
+2026-03-30 11:44:52,873:INFO:⚙️ 偵測到 3 種模型: gemma3:270m, llama3.2:1b, phi3:latest
+2026-03-30 11:44:52,873:INFO:🔒 允許同時運行的最大模型數量 (maxConcurrentModels): 1
+2026-03-30 11:44:52,873:INFO:⚡ 每個模型最大併發限制 (concurrencyPerModel): 8
+2026-03-30 11:44:52,874:INFO:🔥 模型 [gemma3:270m] 取得執行許可，開始處理 6 筆任務...
+2026-03-30 11:44:52,874:INFO:
+📢 [Debug] Model 'gemma3:270m' 已啟動專屬排程，最大併發限制: 8
+2026-03-30 11:44:56,914:INFO:✅ 模型 [gemma3:270m] 的任務已全數處理完畢，釋放模型許可。
+2026-03-30 11:44:56,914:INFO:🔥 模型 [llama3.2:1b] 取得執行許可，開始處理 6 筆任務...
+2026-03-30 11:44:56,915:INFO:
+📢 [Debug] Model 'llama3.2:1b' 已啟動專屬排程，最大併發限制: 8
+2026-03-30 11:44:59,864:INFO:✅ 模型 [llama3.2:1b] 的任務已全數處理完畢，釋放模型許可。
+2026-03-30 11:44:59,864:INFO:🔥 模型 [phi3:latest] 取得執行許可，開始處理 6 筆任務...
+2026-03-30 11:44:59,864:INFO:
+📢 [Debug] Model 'phi3:latest' 已啟動專屬排程，最大併發限制: 8
+2026-03-30 11:45:05,221:INFO:✅ 模型 [phi3:latest] 的任務已全數處理完畢，釋放模型許可。
+2026-03-30 11:45:05,221:INFO:✅ 推論完成！原始回應 (Raw Output) 已儲存至: data\test_V9\Temp.csv
+2026-03-30 11:45:05,221:INFO:==== [Step 4] Parsing LLM Outputs ====
+2026-03-30 11:45:05,221:INFO:RegexOutputParser Initialized.
+2026-03-30 11:45:05,221:INFO:==== [OutputParser] Parsing LLM Outputs & Building CSV ====
+2026-03-30 11:45:05,234:INFO:✅ 額外儲存完成！單獨 Prompt 結果已放入: data\test_V9\singleOutput
+2026-03-30 11:45:05,234:INFO:✅ 解析完成！格式化資料已儲存至: data\test_V9\raw.csv
+2026-03-30 11:45:05,235:INFO:==== [Step 5] Processing Results ====
+2026-03-30 11:45:05,235:INFO:LLMResultProcessor(inputCsvPath='data\test_V9\raw.csv', outputCsvPath='data\test_V9\result.csv')
+2026-03-30 11:45:05,235:INFO:process(self=<llm_modules.LLMResultProcessor.LLMResultProcessor object at 0x1dbd2baea10>)
+2026-03-30 11:45:05,235:INFO:Processing data: data\test_V9\raw.csv
+2026-03-30 11:45:05,235:INFO:Loading Raw CSV Data...
+2026-03-30 11:45:05,237:INFO:Data loaded successfully. Shape: (60, 9)
+2026-03-30 11:45:05,237:INFO:Processing True Labels
+2026-03-30 11:45:05,238:INFO:Creating Feature Names
+2026-03-30 11:45:05,239:INFO:Pivoting table (Long to Wide)
+2026-03-30 11:45:05,241:INFO:Pivot completed. New Shape: (10, 11)
+2026-03-30 11:45:05,251:INFO:Generating rich merged table for human review...
+2026-03-30 11:45:05,255:INFO:   -資訊總成已儲存至: data\test_V9\test_merge.csv
+2026-03-30 11:45:05,256:INFO:✅ Data processed successfully!
+2026-03-30 11:45:05,256:INFO:   - Clean Shape: (10, 11)
+2026-03-30 11:45:05,256:INFO:   - Parse Success Rate: 37/60 (61.7%)
+2026-03-30 11:45:05,256:INFO:   - Clean Pipeline Data Saved to: data\test_V9\result.csv
+2026-03-30 11:45:05,256:INFO:==== [Step 6] Evaluating ====
+2026-03-30 11:45:05,258:INFO:LLMEvaluationSystem(inputCsvPath='data\test_V9\result.csv', df_shape=(10, 11), pred_cols_count=6)
+2026-03-30 11:45:05,258:INFO:🚀 System Initialized. Output directory: data\test_V9\eval
+2026-03-30 11:45:05,289:INFO:Difficulty Analysis Complete. Upper Bound: 90.00% (Found 1 hard samples)
+2026-03-30 11:45:05,290:INFO:============Generating Confusion Matrices============
+2026-03-30 11:45:06,022:INFO:============Generating Correctness Heatmap============
+2026-03-30 11:45:06,218:INFO:✅ All results saved to: data\test_V9\eval
+2026-03-30 11:45:06,218:INFO:實驗全部執行完畢！(Pipeline Completed Successfully!)
+2026-04-03 11:37:51,424:INFO:📝 Logger initialized. Writing to ./logs\test_v9_log.log
+2026-04-03 11:37:51,425:INFO:Random seed set to 42
+2026-04-03 11:37:51,425:INFO:========================================
+2026-04-03 11:37:51,425:INFO:        Ollama            
+2026-04-03 11:37:51,425:INFO:========================================
+2026-04-03 11:37:51,429:CRITICAL:❌ 發生未預期的錯誤: 1 validation error for LLMAppConfig
+paths.promptsPath
+  Field required [type=missing, input_value={'dataPath': 'data/bcvcdr...r': 'data/test_V9/eval'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+Traceback (most recent call last):
+  File "c:\Users\s0810\Desktop\Main_LLM\call_LLM.py", line 20, in startLLMPipeline
+    configManager = readLLMConfig(args.config)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\s0810\Desktop\Main_LLM\llm_modules\utils.py", line 16, in __init__
+    self.config: LLMAppConfig = LLMAppConfig(**raw_yaml_dict)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\s0810\.conda\envs\ml_env\Lib\site-packages\pydantic\main.py", line 250, in __init__
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+pydantic_core._pydantic_core.ValidationError: 1 validation error for LLMAppConfig
+paths.promptsPath
+  Field required [type=missing, input_value={'dataPath': 'data/bcvcdr...r': 'data/test_V9/eval'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.12/v/missing
+2026-04-03 11:39:43,375:INFO:📝 Logger initialized. Writing to ./logs\test_v9_log.log
+2026-04-03 11:39:43,375:INFO:Random seed set to 42
+2026-04-03 11:39:43,375:INFO:========================================
+2026-04-03 11:39:43,375:INFO:        Ollama            
+2026-04-03 11:39:43,375:INFO:========================================
+2026-04-03 11:39:43,385:INFO:Initializing ExperimentPipeline()
+2026-04-03 11:39:43,385:CRITICAL:❌ 發生未預期的錯誤: 'pathsConfig' object has no attribute 'rawPromptCmbOutputPath'
+Traceback (most recent call last):
+  File "c:\Users\s0810\Desktop\Main_LLM\call_LLM.py", line 23, in startLLMPipeline
+    pipeline = ExperimentPipeline(configManager.config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\s0810\Desktop\Main_LLM\llm_modules\Pipeline.py", line 27, in __init__
+    self.rawPromptCmbOutputPath = self.pathsConfig.rawPromptCmbOutputPath
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\s0810\.conda\envs\ml_env\Lib\site-packages\pydantic\main.py", line 1026, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'pathsConfig' object has no attribute 'rawPromptCmbOutputPath'
+2026-04-03 11:40:58,218:INFO:📝 Logger initialized. Writing to ./logs\test_v9_log.log
+2026-04-03 11:40:58,218:INFO:Random seed set to 42
+2026-04-03 11:40:58,219:INFO:========================================
+2026-04-03 11:40:58,219:INFO:        Ollama            
+2026-04-03 11:40:58,219:INFO:========================================
+2026-04-03 11:40:58,221:INFO:Initializing ExperimentPipeline()
+2026-04-03 11:40:58,223:CRITICAL:❌ 發生未預期的錯誤: 'pathsConfig' object has no attribute 'rawPromptCmbOutputPath'
+Traceback (most recent call last):
+  File "c:\Users\s0810\Desktop\Main_LLM\call_LLM.py", line 23, in startLLMPipeline
+    pipeline = ExperimentPipeline(configManager.config)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\s0810\Desktop\Main_LLM\llm_modules\Pipeline.py", line 27, in __init__
+    self.rawPromptCmbOutputPath = self.pathsConfig.rawPromptCmbOutputPath
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\s0810\.conda\envs\ml_env\Lib\site-packages\pydantic\main.py", line 1026, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'pathsConfig' object has no attribute 'rawPromptCmbOutputPath'
+2026-04-05 11:06:37,187:INFO:📝 Logger initialized. Writing to ./logs\test_v9_log.log
+2026-04-05 11:06:37,187:INFO:Random seed set to 42
+2026-04-05 11:06:37,187:INFO:========================================
+2026-04-05 11:06:37,187:INFO:        Ollama            
+2026-04-05 11:06:37,187:INFO:========================================
+2026-04-05 11:06:37,192:INFO:Initializing ExperimentPipeline()
+2026-04-05 11:06:37,193:INFO:ExperimentPipeline initialized.
+2026-04-05 11:06:37,193:INFO:==== [Step 1] Loading Data & Prompts ====
+2026-04-05 11:06:37,479:WARNING:⚠️test: Using only first 10 pairs.
+2026-04-05 11:06:37,484:INFO:==== [Step 2] Building Tasks ====
+2026-04-05 11:06:37,487:INFO:發現斷點紀錄！已載入 18 筆完成的任務身分證。
+2026-04-05 11:06:37,487:INFO:TaskBuilder Initialized.
+2026-04-05 11:06:37,487:INFO:==== [TaskBuilder] Preparing Batched Tasks ====
+2026-04-05 11:06:37,492:INFO:已跳過 18 筆先前已完成的任務。
+2026-04-05 11:06:37,492:INFO:成功建構 0 筆需要執行的新任務批次！
+2026-04-05 11:06:37,492:INFO:==== [Step 3] All tasks already completed! Skipping Inference. ====
+2026-04-05 11:06:37,492:INFO:==== [Step 4] Parsing LLM Outputs ====
+2026-04-05 11:06:37,492:CRITICAL:❌ 發生未預期的錯誤: OutputParser.__init__() got an unexpected keyword argument 'singlePromptCmbOutputDir'
+Traceback (most recent call last):
+  File "c:\Users\s0810\Desktop\Main_LLM\call_LLM.py", line 26, in startLLMPipeline
+    pipeline.run()
+  File "c:\Users\s0810\Desktop\Main_LLM\llm_modules\Pipeline.py", line 100, in run
+    parser = OutputParser(
+             ^^^^^^^^^^^^^
+TypeError: OutputParser.__init__() got an unexpected keyword argument 'singlePromptCmbOutputDir'
+2026-04-05 11:18:27,911:INFO:📝 Logger initialized. Writing to ./logs\test_v9_log.log
+2026-04-05 11:18:27,911:INFO:Random seed set to 42
+2026-04-05 11:18:27,911:INFO:========================================
+2026-04-05 11:18:27,911:INFO:        Ollama            
+2026-04-05 11:18:27,912:INFO:========================================
+2026-04-05 11:18:27,915:INFO:Initializing ExperimentPipeline()
+2026-04-05 11:18:27,915:INFO:ExperimentPipeline initialized.
+2026-04-05 11:18:27,915:INFO:==== [Step 1] Loading Data & Prompts ====
+2026-04-05 11:18:28,209:WARNING:⚠️test: Using only first 10 pairs.
+2026-04-05 11:18:28,212:INFO:==== [Step 2] Building Tasks ====
+2026-04-05 11:18:28,215:INFO:發現斷點紀錄！已載入 18 筆完成的任務身分證。
+2026-04-05 11:18:28,215:INFO:TaskBuilder Initialized.
+2026-04-05 11:18:28,215:INFO:==== [TaskBuilder] Preparing Batched Tasks ====
+2026-04-05 11:18:28,217:INFO:已跳過 18 筆先前已完成的任務。
+2026-04-05 11:18:28,217:INFO:成功建構 0 筆需要執行的新任務批次！
+2026-04-05 11:18:28,217:INFO:==== [Step 3] All tasks already completed! Skipping Inference. ====
+2026-04-05 11:18:28,217:INFO:==== [Step 4] Parsing LLM Outputs ====
+2026-04-05 11:18:28,217:INFO:OutputParser Initialized.
+2026-04-05 11:18:28,218:INFO:==== [OutputParser] Parsing LLM Outputs & Building CSV ====
+2026-04-05 11:18:28,229:INFO:✅ 額外儲存完成！單獨 Prompt 結果已放入: data\test_V9\singleOutput
+2026-04-05 11:18:28,229:INFO:✅ 解析完成！格式化資料已儲存至: data\test_V9\raw.csv
+2026-04-05 11:18:28,230:INFO:==== [Step 5] Processing Results ====
+2026-04-05 11:18:28,230:INFO:LLMResultProcessor(inputCsvPath='data\test_V9\raw.csv', outputCsvPath='data\test_V9\result.csv')
+2026-04-05 11:18:28,230:INFO:process(self=<llm_modules.LLMResultProcessor.LLMResultProcessor object at 0x1d96d9e0450>)
+2026-04-05 11:18:28,230:INFO:Processing data: data\test_V9\raw.csv
+2026-04-05 11:18:28,230:INFO:Loading Raw CSV Data...
+2026-04-05 11:18:28,231:INFO:Data loaded successfully. Shape: (60, 9)
+2026-04-05 11:18:28,231:INFO:Processing True Labels
+2026-04-05 11:18:28,232:INFO:Creating Feature Names
+2026-04-05 11:18:28,233:INFO:Pivoting table (Long to Wide)
+2026-04-05 11:18:28,242:INFO:Pivot completed. New Shape: (10, 11)
+2026-04-05 11:18:28,243:INFO:Generating rich merged table for human review...
+2026-04-05 11:18:28,246:INFO:   -資訊總成已儲存至: data\test_V9\test_merge.csv
+2026-04-05 11:18:28,246:INFO:✅ Data processed successfully!
+2026-04-05 11:18:28,247:INFO:   - Clean Shape: (10, 11)
+2026-04-05 11:18:28,247:INFO:   - Parse Success Rate: 37/60 (61.7%)
+2026-04-05 11:18:28,247:INFO:   - Clean Pipeline Data Saved to: data\test_V9\result.csv
+2026-04-05 11:18:28,247:INFO:==== [Step 6] Evaluating ====
+2026-04-05 11:18:28,250:INFO:LLMEvaluationSystem(inputCsvPath='data\test_V9\result.csv', df_shape=(10, 11), pred_cols_count=6)
+2026-04-05 11:18:28,250:INFO:System Initialized. Output directory: data\test_V9\eval
+2026-04-05 11:18:28,284:INFO:Difficulty Analysis Complete. Upper Bound: 90.00% (Found 1 hard samples)
+2026-04-05 11:18:28,285:INFO:============Generating Confusion Matrices============
+2026-04-05 11:18:29,597:INFO:============Generating Correctness Heatmap============
+2026-04-05 11:18:29,813:INFO:✅ All results saved to: data\test_V9\eval
+2026-04-05 11:18:29,813:INFO:實驗全部執行完畢！(Pipeline Completed Successfully!)

@@ -1,171 +1,200 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-import os
 import numpy as np
-import time
-import logging 
+import logging
+from pathlib import Path
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, matthews_corrcoef
 
-class LLMEvaluationSystem:
-    def __init__(self, inputCsvPath: str, outputBaseDir: str = "./output", indexCols: list = None):
+class PromptCmbEval:
+    def __init__(self, inputCsvPath: Path, outputBaseDir: Path = Path("./output"), indexCols: list = None):
         """
-        初始化評估系統
-        :param inputCsvPath: 包含預測結果的 CSV 路徑
-        :param outputBaseDir: 輸出結果的根目錄
-        :param indexCols: 識別資料的固定欄位清單 (解耦用)
-        """
-        self.input_csv_path = inputCsvPath
-        self.df = pd.read_csv(self.input_csv_path)
-        
-        default_index_cols = ['Data_ID', 'PMID', 'E1', 'E2']
-        self.index_cols = indexCols if indexCols else default_index_cols
-        
-        self.fixed_cols = self.index_cols + ['True_Label']
-        
-        self.pred_cols = [c for c in self.df.columns if c not in self.fixed_cols]
-        self.y_true = self.df['True_Label']
-        
-        self.results_list = []
-        self.report_df = None
-        self.correctness_matrix = pd.DataFrame(index=self.df.index)
-        self.hard_samples = None
-        self.upper_bound = 0.0
-        
-        self.output_dir = outputBaseDir
-        self.plots_dir = os.path.join(self.output_dir, "plots")
-        os.makedirs(self.plots_dir, exist_ok=True)
-        
-        logging.info(f"LLMEvaluationSystem(inputCsvPath='{self.input_csv_path}', df_shape={self.df.shape}, pred_cols_count={len(self.pred_cols)})")
-        logging.info(f"🚀 System Initialized. Output directory: {self.output_dir}")
+        初始化評估系統。
+        讀取寬格式 CSV（每欄一個模型/prompt 組合），計算分類指標並產出圖表與報表。
 
-    def _calculate_single_metric(self, y_true_subset, y_pred_subset):
+        :param inputCsvPath: LLMResultProcessor 產出的寬表格 CSV
+        :param outputBaseDir: 評估結果（CSV 報表與圖表）的輸出根目錄
+        :param indexCols: 識別資料身份的固定欄位清單，不參與評估（None 時使用預設值）
         """
-        [Private Method] 計算單一模型的指標
+        self.inputCsvPath = Path(inputCsvPath)
+        self.inputDf = pd.read_csv(str(self.inputCsvPath))
+
+        defaultIndexColsList = ['Data_ID', 'PMID', 'E1', 'E2']
+        self.indexColsList = indexCols if indexCols else defaultIndexColsList
+
+        self.fixedColsList = self.indexColsList + ['True_Label']  # 固定欄位（非預測欄）
+        # 排除固定欄位後，剩餘的欄位即為各模型/prompt 組合的預測結果欄
+        self.predColsList = [c for c in self.inputDf.columns if c not in self.fixedColsList]
+        self.yTrue = self.inputDf['True_Label']  # 所有樣本的真實標籤（含 -1 的未知值，評估時會被過濾）
+
+        self.resultsList = []          # 各模型評估指標的原始紀錄，doEval 後會轉成 reportDf
+        self.reportDf = None           # 評估指標報表（按 F1 排序）
+        self.correctnessMatrixDf = pd.DataFrame(index=self.inputDf.index)  # 每個樣本對每個模型的對錯矩陣
+        self.hardSamplesDf = None      # 所有模型都答錯的難題子集
+        self.upperBound = 0.0          # 理論上限：排除難題後的最高可達準確率
+
+        self.outputDirPath = Path(outputBaseDir)
+        self.plotsDirPath = self.outputDirPath / "plots"  # 混淆矩陣等圖表的存放子目錄
+        self.plotsDirPath.mkdir(parents=True, exist_ok=True)
+
+        logging.info(f"LLMEvaluationSystem(inputCsvPath='{self.inputCsvPath}', df_shape={self.inputDf.shape}, pred_cols_count={len(self.predColsList)})")
+        logging.info(f"System Initialized. Output directory: {self.outputDirPath}")
+
+    def doCalcPromptCmbMetrics(self, yTrueSubset, yPredSubset):
         """
-        if len(y_true_subset) == 0:
+        計算單一模型/prompt 組合的分類評估指標。
+
+        :param yTrueSubset: 過濾後的真實標籤 Series（已排除 -1 的無效樣本）
+        :param yPredSubset: 對應的預測標籤 Series
+        :return: 包含 Accuracy/Precision/Recall/F1/MCC 的 dict，各值取到小數點後 2 位；資料為空時回傳 None
+        """
+        if len(yTrueSubset) == 0:
             return None
-            
-        metrics = {
-            "Accuracy": accuracy_score(y_true_subset, y_pred_subset),
-            "Precision": precision_score(y_true_subset, y_pred_subset, zero_division=0),
-            "Recall": recall_score(y_true_subset, y_pred_subset, zero_division=0),
-            "F1_Score": f1_score(y_true_subset, y_pred_subset, zero_division=0),
-            "MCC": matthews_corrcoef(y_true_subset, y_pred_subset)
+
+        metricsDict = {
+            "Accuracy": accuracy_score(yTrueSubset, yPredSubset),
+            "Precision": precision_score(yTrueSubset, yPredSubset, zero_division=0),  # 無正類預測時不報錯，回傳 0
+            "Recall": recall_score(yTrueSubset, yPredSubset, zero_division=0),
+            "F1_Score": f1_score(yTrueSubset, yPredSubset, zero_division=0),
+            "MCC": matthews_corrcoef(yTrueSubset, yPredSubset)  # MCC 對類別不平衡的資料集更具參考價值
         }
-        return {k: round(v, 2) for k, v in metrics.items()}
-    
-    def runEvaluation(self):
+        return {k: round(v, 2) for k, v in metricsDict.items()}
+
+    def doEval(self):
         """
-        執行主要評估迴圈：遍歷所有模型欄位，計算指標並記錄對錯
+        執行主要評估迴圈：遍歷所有模型/prompt 欄位，計算指標並記錄每個樣本的對錯情況。
+
+        評估結果存入 self.resultsList（後轉為 self.reportDf），
+        各樣本對錯記錄存入 self.correctnessMatrixDf，供 doAnalyzeUpperBound 使用。
         """
-        for col in self.pred_cols:
-            y_pred = self.df[col]
-            
-            valid_mask = y_pred.isin([0, 1])
-            if valid_mask.sum() == 0:
+        for col in self.predColsList:
+            yPred = self.inputDf[col]
+
+            # 排除 -1（解析失敗或任務跳過），只對有效預測值計算指標
+            validMask = yPred.isin([0, 1])
+            if validMask.sum() == 0:
                 logging.warning(f"⚠️ Warning: Model '{col}' has no valid predictions (0 or 1). Skipping.")
                 continue
-                
-            y_t_v = self.y_true[valid_mask]
-            y_p_v = y_pred[valid_mask]
 
-            metrics = self._calculate_single_metric(y_t_v, y_p_v)
-            if metrics:
-                res_dict = {"Model_Prompt_ID": col}
-                res_dict.update(metrics)
-                res_dict["Valid_Count"] = len(y_t_v)
-                self.results_list.append(res_dict)
-                
-            is_correct = (y_pred == self.y_true).astype(int)
-            self.correctness_matrix[col] = is_correct
+            yTrueValid = self.yTrue[validMask]
+            yPredValid = yPred[validMask]
 
-        if self.results_list:
-            self.report_df = pd.DataFrame(self.results_list)
-            self.report_df = self.report_df.sort_values('F1_Score', ascending=False)
+            metricsDict = self.doCalcPromptCmbMetrics(yTrueValid, yPredValid)
+            if metricsDict:
+                resDict = {"Model_Prompt_ID": col}
+                resDict.update(metricsDict)
+                resDict["Valid_Count"] = len(yTrueValid)  # 紀錄有效預測數，便於判斷結果可信度
+                self.resultsList.append(resDict)
+
+            # 以全體樣本（含 -1）計算對錯，-1 vs 任何值都為 False (0)，不影響難題定義
+            isCorrectSeries = (yPred == self.yTrue).astype(int)
+            self.correctnessMatrixDf[col] = isCorrectSeries
+
+        if self.resultsList:
+            self.reportDf = pd.DataFrame(self.resultsList)
+            self.reportDf = self.reportDf.sort_values('F1_Score', ascending=False)  # 按 F1 降序，方便找最佳組合
         else:
             logging.error("❌ No valid results generated.")
-        
-    def analyzeDifficulty(self):
+
+    def doAnalyzeUpperBound(self):
         """
-        計算難題 (Hard Samples) 與 理論上限 (Upper Bound)
+        計算難題（所有模型均答錯的樣本）與理論上限（Upper Bound）。
+
+        Upper Bound = (總樣本數 - 難題數) / 總樣本數
+        代表即使完美解決所有非難題，理論上能達到的最高準確率。
+
+        結果存入 self.hardSamplesDf 與 self.upperBound。
         """
-        if self.correctness_matrix.empty:
+        if self.correctnessMatrixDf.empty:
             logging.warning("Correctness matrix is empty. Skipping difficulty analysis.")
             return
 
-        correct_counts = self.correctness_matrix.sum(axis=1)
-        hard_indices = correct_counts[correct_counts == 0].index
-        
-        review_cols = self.index_cols + ['True_Label']
-        available_review_cols = [c for c in review_cols if c in self.df.columns]
-        self.hard_samples = self.df.loc[hard_indices, available_review_cols]
+        # 對每個樣本橫向加總對錯值，加總為 0 代表所有模型都答錯
+        correctCountsSeries = self.correctnessMatrixDf.sum(axis=1)
+        hardIndicesIdx = correctCountsSeries[correctCountsSeries == 0].index
 
-        total_samples = len(self.df)
-        solvable_samples = total_samples - len(self.hard_samples)
-        self.upper_bound = solvable_samples / total_samples if total_samples > 0 else 0
-        
-        logging.info(f"Difficulty Analysis Complete. Upper Bound: {self.upper_bound:.2%} (Found {len(self.hard_samples)} hard samples)")
+        reviewColsList = self.indexColsList + ['True_Label']
+        availableReviewColsList = [c for c in reviewColsList if c in self.inputDf.columns]
+        self.hardSamplesDf = self.inputDf.loc[hardIndicesIdx, availableReviewColsList]
 
-    def plotConfusionMatrices(self):
+        totalSamples = len(self.inputDf)
+        solvableSamples = totalSamples - len(self.hardSamplesDf)
+        self.upperBound = solvableSamples / totalSamples if totalSamples > 0 else 0
+
+        logging.info(f"Difficulty Analysis Complete. Upper Bound: {self.upperBound:.2%} (Found {len(self.hardSamplesDf)} hard samples)")
+
+    def doPlotConfusionMatrices(self):
         """
-        為每個模型繪製混淆矩陣並存檔
+        為每個模型/prompt 組合繪製混淆矩陣並儲存為 PNG。
+        僅使用有效預測值（0 或 1），排除解析失敗的 -1。
+
+        圖表儲存至 self.plotsDirPath，檔名格式：CM_{safeFeatureName}.png
         """
         logging.info("============Generating Confusion Matrices============")
-        
-        for col in self.pred_cols:
-            y_pred = self.df[col]
-            valid_mask = y_pred.isin([0, 1])
-            if valid_mask.sum() == 0: continue
-            
-            y_t_v = self.y_true[valid_mask]
-            y_p_v = y_pred[valid_mask]
-            
-            cm = confusion_matrix(y_t_v, y_p_v, labels=[0, 1])
-            
+
+        for col in self.predColsList:
+            yPred = self.inputDf[col]
+            validMask = yPred.isin([0, 1])
+            if validMask.sum() == 0: continue
+
+            yTrueValid = self.yTrue[validMask]
+            yPredValid = yPred[validMask]
+
+            # 明確指定 labels=[0, 1] 確保即使某類別無預測，矩陣仍為 2×2
+            confusionMatrixArr = confusion_matrix(yTrueValid, yPredValid, labels=[0, 1])
+
             plt.figure(figsize=(6, 5))
-            sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', cbar=False,
+            sns.heatmap(confusionMatrixArr, annot=True, fmt='d', cmap='Blues', cbar=False,
                         xticklabels=['Pred: 0', 'Pred: 1'],
                         yticklabels=['True: 0', 'True: 1'])
             plt.title(f"Confusion Matrix: {col}")
             plt.ylabel('Actual')
             plt.xlabel('Predicted')
             plt.tight_layout()
-            
-            safe_name = str(col).replace(":", "_").replace("+", "_").replace(" ", "_").replace("/", "_")
-            save_path = os.path.join(self.plots_dir, f"CM_{safe_name}.png")
 
-            plt.savefig(save_path, bbox_inches='tight')
+            # 將欄名中的特殊字元替換，確保檔名在各 OS 均有效
+            safeFileNameStr = str(col).replace(":", "_").replace("+", "_").replace(" ", "_").replace("/", "_")
+            savePath = self.plotsDirPath / f"CM_{safeFileNameStr}.png"
+
+            plt.savefig(str(savePath), bbox_inches='tight')
             plt.close()
-            
-    def plotHeatmap(self):
+
+    def doPlotHeatmap(self):
         """
-        繪製模型對錯分佈熱圖 (Heatmap)
-        """        
-        if self.correctness_matrix.empty: 
+        繪製所有模型對每個樣本的對錯分佈熱圖（Correctness Heatmap）並儲存。
+
+        X 軸為樣本索引，Y 軸為模型/prompt 組合；
+        綠色代表答對，紅色代表答錯，整體視覺化各組合在哪些樣本上表現不一致。
+
+        圖表儲存至 self.outputDirPath / correctness_heatmap.png
+        """
+        if self.correctnessMatrixDf.empty:
             logging.warning("Correctness matrix is empty. Skipping heatmap plotting.")
             return
-        
+
         logging.info("============Generating Correctness Heatmap============")
         plt.figure(figsize=(12, 8))
-        sns.heatmap(self.correctness_matrix.T, cmap="RdYlGn", cbar=True, cbar_kws={'label': 'Correct (1) / Incorrect (0)'})
+        # .T 轉置：將模型放在 Y 軸（行）、樣本放在 X 軸（列），符合直覺的閱讀方向
+        sns.heatmap(self.correctnessMatrixDf.T, cmap="RdYlGn", cbar=True, cbar_kws={'label': 'Correct (1) / Incorrect (0)'})
         plt.title("Model Correctness Heatmap (Green=Correct)")
         plt.xlabel("Sample Index")
         plt.ylabel("Models")
         plt.tight_layout()
-        save_path = os.path.join(self.output_dir, "correctness_heatmap.png")
+        savePath = self.outputDirPath / "correctness_heatmap.png"
 
-        plt.savefig(save_path, bbox_inches='tight')
+        plt.savefig(str(savePath), bbox_inches='tight')
         plt.close()
-        
-    def saveResults(self):
+
+    def doSaveResults(self):
         """
-        輸出所有 CSV 報表
+        輸出所有 CSV 報表至 self.outputDirPath：
+        - eval_summary.csv：各模型/prompt 組合的評估指標（按 F1 排序）
+        - samples_to_review.csv：所有模型均答錯的難題清單，供人工審閱
         """
-        if self.report_df is not None:
-            self.report_df.to_csv(os.path.join(self.output_dir, "eval_summary.csv"), index=False, encoding='utf-8-sig')
-            
-        if self.hard_samples is not None:
-            self.hard_samples.to_csv(os.path.join(self.output_dir, "samples_to_review.csv"), index=False, encoding='utf-8-sig')
-            
-        logging.info(f"✅ All results saved to: {self.output_dir}")
+        if self.reportDf is not None:
+            self.reportDf.to_csv(str(self.outputDirPath / "eval_summary.csv"), index=False, encoding='utf-8-sig')
+
+        if self.hardSamplesDf is not None:
+            self.hardSamplesDf.to_csv(str(self.outputDirPath / "samples_to_review.csv"), index=False, encoding='utf-8-sig')
+
+        logging.info(f"✅ All results saved to: {self.outputDirPath}")
