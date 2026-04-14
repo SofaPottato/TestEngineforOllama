@@ -1,7 +1,0 @@
-﻿Model_Prompt_ID,Accuracy,Precision,Recall,F1_Score,MCC,Valid_Count
-phi3:latest_S2A01 + RE201,1.0,1.0,1.0,1.0,1.0,5
-phi3:latest_EMO01 + RAR02,0.88,0.75,1.0,0.86,0.77,8
-gemma3:270m_EMO01 + RAR02,0.0,0.0,0.0,0.0,0.0,1
-gemma3:270m_S2A01 + RE201,1.0,0.0,0.0,0.0,0.0,2
-llama3.2:1b_EMO01 + RAR02,0.6,0.0,0.0,0.0,0.0,10
-llama3.2:1b_S2A01 + RE201,0.6,0.0,0.0,0.0,0.0,10

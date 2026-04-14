@@ -135,17 +135,17 @@ class LLMEngine:
         :return: 包含 rawOutput 與 timestamp 的完整任務 dict
         """
         if isinstance(task, dict):  # 支援 dict 格式的任務資料結構，從字典中提取必要的欄位
-            taskID = str(task.get('taskID', 'unknown_task_id'))
+            taskID = str(task.get('taskID', 'unknown_taskID'))
             model = str(task.get('model', 'unknown_model'))
             systemPrompt = task.get('sysPrompt', '')
             userPrompt = task.get('userPrompt', '')
-            batchData = task.get('batchData', {})
+            items = task.get('items', [])
         else:
-            taskID = str(getattr(task, 'taskID', 'unknown_task_id'))
+            taskID = str(getattr(task, 'taskID', 'unknown_taskID'))
             model = str(getattr(task, 'model', 'unknown_model'))
             systemPrompt = getattr(task, 'sysPrompt', '')
             userPrompt = getattr(task, 'userPrompt', '')
-            batchData = getattr(task, 'batchData', {})
+            items = getattr(task, 'items', [])
 
         if taskID in self.existingTaskIDSet:
             # 若 taskID 已存在於已完成集合中，直接返回原始任務資料，不重送 API 請求
@@ -171,7 +171,7 @@ class LLMEngine:
             completedTaskDict['rawOutput'] = rawOutput
             completedTaskDict['timestamp'] = time.strftime("%Y-%m-%d %H:%M:%S")
 
-            batchDataJsonStr = json.dumps(batchData, ensure_ascii=False)  # 序列化為 JSON 字串存入 CSV
+            itemsJsonStr = json.dumps(items, ensure_ascii=False)  # 序列化為 JSON 字串存入 CSV
 
             rowDataDict = {
                 "timestamp": completedTaskDict['timestamp'],
@@ -181,7 +181,7 @@ class LLMEngine:
                 "systemPrompt": systemPrompt,
                 "userPrompt": userPrompt,
                 "rawOutput": rawOutput,
-                "batchData": batchDataJsonStr
+                "items": itemsJsonStr
             }
 
             async with self.fileLockObj:

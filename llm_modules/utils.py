@@ -12,8 +12,8 @@ class ReadLLMConfig:
     """專門負責讀取 LLM 設定檔並驗證型別與路徑"""
     def __init__(self, configPath: str):
         # 第一步：讀取原始的 YAML 字典
-        raw_yaml_dict = self.loadYamlConfiguration(configPath)
-        self.config: LLMAppConfig = LLMAppConfig(**raw_yaml_dict)
+        rawYamlDict = self.loadYamlConfiguration(configPath)
+        self.config: LLMAppConfig = LLMAppConfig(**rawYamlDict)
         
     def loadYamlConfiguration(self, path: str) -> Dict[str, Any]:
         """讀取 YAML 檔案"""

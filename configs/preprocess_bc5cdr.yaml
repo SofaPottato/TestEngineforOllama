@@ -1,0 +1,10 @@
+# =========================================================================
+# BC5CDR 前處理設定檔
+# 使用方式：python preprocess/bc5cdr.py --config configs/preprocess_bc5cdr.yaml
+# CLI 參數會覆寫此檔內容
+# =========================================================================
+
+input:      "data/bcvcdr_raw/BCVCDR_Processed.csv"
+output:     "data/test/tasks.csv"
+batch_size: 5          # 每個 task 包含的 item 數（1 = 單筆模式）
+limit:      30         # 只處理前 N 列（測試用）；null 代表全量

@@ -7,25 +7,34 @@ from pathlib import Path
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, matthews_corrcoef
 
 class PromptCmbEval:
-    def __init__(self, inputCsvPath: Path, outputBaseDir: Path = Path("./output"), indexCols: list = None):
+    def __init__(self, inputCsvPath: Path, outputBaseDir: Path = Path("./output")):
         """
         初始化評估系統。
         讀取寬格式 CSV（每欄一個模型/prompt 組合），計算分類指標並產出圖表與報表。
 
+        預測欄的偵測：trueLabel 欄以外，所有值為數字的欄位視為預測欄。
+
         :param inputCsvPath: LLMResultProcessor 產出的寬表格 CSV
         :param outputBaseDir: 評估結果（CSV 報表與圖表）的輸出根目錄
-        :param indexCols: 識別資料身份的固定欄位清單，不參與評估（None 時使用預設值）
         """
         self.inputCsvPath = Path(inputCsvPath)
         self.inputDf = pd.read_csv(str(self.inputCsvPath))
 
-        defaultIndexColsList = ['Data_ID', 'PMID', 'E1', 'E2']
-        self.indexColsList = indexCols if indexCols else defaultIndexColsList
+        # 動態偵測：預測欄的值僅限 {-1, 0, 1}，其餘（dataID, e1, e2, ...）視為 index 欄
+        predValueSet = {-1, 0, 1}
+        self.predColsList = []
+        self.indexColsList = []
+        for col in self.inputDf.columns:
+            if col == 'trueLabel':
+                continue
+            numericCol = pd.to_numeric(self.inputDf[col], errors='coerce')
+            if numericCol.notna().all() and set(numericCol.unique()).issubset(predValueSet):
+                self.predColsList.append(col)
+            else:
+                self.indexColsList.append(col)
 
-        self.fixedColsList = self.indexColsList + ['True_Label']  # 固定欄位（非預測欄）
-        # 排除固定欄位後，剩餘的欄位即為各模型/prompt 組合的預測結果欄
-        self.predColsList = [c for c in self.inputDf.columns if c not in self.fixedColsList]
-        self.yTrue = self.inputDf['True_Label']  # 所有樣本的真實標籤（含 -1 的未知值，評估時會被過濾）
+        self.fixedColsList = self.indexColsList + ['trueLabel']
+        self.yTrue = self.inputDf['trueLabel']  # 所有樣本的真實標籤（含 -1 的未知值，評估時會被過濾）
 
         self.resultsList = []          # 各模型評估指標的原始紀錄，doEval 後會轉成 reportDf
         self.reportDf = None           # 評估指標報表（按 F1 排序）
@@ -55,7 +64,7 @@ class PromptCmbEval:
             "Accuracy": accuracy_score(yTrueSubset, yPredSubset),
             "Precision": precision_score(yTrueSubset, yPredSubset, zero_division=0),  # 無正類預測時不報錯，回傳 0
             "Recall": recall_score(yTrueSubset, yPredSubset, zero_division=0),
-            "F1_Score": f1_score(yTrueSubset, yPredSubset, zero_division=0),
+            "f1Score": f1_score(yTrueSubset, yPredSubset, zero_division=0),
             "MCC": matthews_corrcoef(yTrueSubset, yPredSubset)  # MCC 對類別不平衡的資料集更具參考價值
         }
         return {k: round(v, 2) for k, v in metricsDict.items()}
@@ -81,9 +90,9 @@ class PromptCmbEval:
 
             metricsDict = self.doCalcPromptCmbMetrics(yTrueValid, yPredValid)
             if metricsDict:
-                resDict = {"Model_Prompt_ID": col}
+                resDict = {"modelPromptID": col}
                 resDict.update(metricsDict)
-                resDict["Valid_Count"] = len(yTrueValid)  # 紀錄有效預測數，便於判斷結果可信度
+                resDict["validCount"] = len(yTrueValid)  # 紀錄有效預測數，便於判斷結果可信度
                 self.resultsList.append(resDict)
 
             # 以全體樣本（含 -1）計算對錯，-1 vs 任何值都為 False (0)，不影響難題定義
@@ -92,7 +101,7 @@ class PromptCmbEval:
 
         if self.resultsList:
             self.reportDf = pd.DataFrame(self.resultsList)
-            self.reportDf = self.reportDf.sort_values('F1_Score', ascending=False)  # 按 F1 降序，方便找最佳組合
+            self.reportDf = self.reportDf.sort_values('f1Score', ascending=False)  # 按 F1 降序，方便找最佳組合
         else:
             logging.error("❌ No valid results generated.")
 
@@ -113,7 +122,7 @@ class PromptCmbEval:
         correctCountsSeries = self.correctnessMatrixDf.sum(axis=1)
         hardIndicesIdx = correctCountsSeries[correctCountsSeries == 0].index
 
-        reviewColsList = self.indexColsList + ['True_Label']
+        reviewColsList = self.indexColsList + ['trueLabel']
         availableReviewColsList = [c for c in reviewColsList if c in self.inputDf.columns]
         self.hardSamplesDf = self.inputDf.loc[hardIndicesIdx, availableReviewColsList]
 
