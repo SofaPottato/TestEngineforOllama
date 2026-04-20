@@ -1,40 +1,29 @@
 # =========================================================================
 # LLM 推論主設定檔
-# 使用前先跑前處理：
-#   python preprocess/bc5cdr.py --input data/bcvcdr_raw/BCVCDR_Processed.csv \
-#       --output data/test/tasks.csv --batch_size 5
+# 執行前處理：python preprocess/bc5cdr.py
 # =========================================================================
 
+# --- 路徑 ---
 paths:
-  taskCsvPath:           "data/test/tasks.csv"
-  promptCmbPath:         "data/prompt_output/test_manual_prompts.csv"
-  rawOutputPath:         "data/test/output/raw.csv"
-  resultPath:            "data/test/output/result.csv"
-  singlePromptOutputDir: "data/test/output/singleOutput"
-  partialInfoPath:       "data/test/output/partialInfo.csv"
-  fullInfoPath:          "data/test/output/fullInfo.csv"
-  evalDir:               "data/test/output/eval"
+  taskCsvPath:   "data/test/tasks.csv"
+  promptCmbPath: "data/prompt_output/testPrompt.csv"
+  outputRoot:    "data/testv1v/output"
 
+  # 可選 override（未填則用預設檔名，全部放在 outputRoot 底下）
+  rawOutputPath:            "raw.csv"
+  resultPath:               "result.csv"
+  singlePromptCmbOutputDir: "singleOutput"
+  partialInfoPath:          "partialInfo.csv"
+  fullInfoPath:             "fullInfo.csv"
+  evalDir:                  "eval"
+
+# --- 模型 ---
 selectedModels: ["llama3.2:1b"]
+pairNumber: 10      # 每個 LLM task 包含的 item 數；1 = 單筆模式
 
-ollamaServer:
-  url:     "http://localhost:11434/api/chat"
-  timeout: 600
-
-llmOptions:
-  temperature:    0
-  num_predict:    60
-  num_ctx:        8192
-  num_gpu:        99
-  repeat_penalty: 1.1
-
-labelMap:
-  positive: ["cid"]
-  negative: ["0", "false", "none", "negative"]
-
-concurrencyPerModel: 4
-maxConcurrentModels: 1
-
+# --- Prompt 模板 ---
+# contextColumns：Task CSV 中對應 taskTemplate 佔位符的欄位名稱
+contextColumns: ["title", "abstract"]
 taskTemplate: |
   Title: {title}
   Abstract: {abstract}
@@ -42,7 +31,7 @@ taskTemplate: |
   Task: Determine if the Chemical induces the Disease for the following pairs based strictly on the text.
 
   Pairs to analyze:
-  {items}
+  {pairs}
 
   IMPORTANT OUTPUT RULES:
   1. Output ONLY a numbered list.
@@ -50,4 +39,30 @@ taskTemplate: |
   3. Do NOT provide explanations.
   4. Do NOT use Markdown formatting.
 
-itemTemplate: "{i}: Chemical: {e1} | Disease: {e2}\n"
+# pairColumns：pairs JSON 中對應 pairTemplate 佔位符的欄位名稱
+pairColumns: ["e1", "e2"]
+
+pairTemplate: |
+  {i}: Chemical: {e1} | Disease: {e2}
+
+# --- Ollama 連線 ---
+ollamaServer:
+  url:     "http://localhost:11434/api/chat"
+  timeout: 600
+
+# --- 推論參數 ---
+llmOptions:
+  temperature:    0
+  num_predict:    60
+  num_ctx:        8192
+  num_gpu:        99
+  repeat_penalty: 1.1
+
+# --- 標籤映射 ---
+labelMap:
+  positive: ["cid"]
+  negative: ["0", "false", "none", "negative"]
+
+# --- 並發控制 ---
+concurrencyPerModel: 2
+maxConcurrentModels: 1

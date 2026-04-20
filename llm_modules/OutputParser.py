@@ -8,20 +8,18 @@ from .schemas import ParsingError
 
 
 class OutputParser:
-    def __init__(self, rawCsvPath: Path, csvOutputPath: Path, singlePromptCmbOutputDir: Path):
+    def __init__(self, rawCsvPath: Path, outputCsvPath: Path, singlePromptCmbOutputDir: Path):
         """
         初始化輸出解析器。
         負責將 LLM 的 Raw Output (字串) 透過 Regex 拆解成結構化的 DataFrame。
 
         :param rawCsvPath: 推論暫存 CSV 的路徑（由 LLMEngine 逐筆寫入）
-        :param csvOutputPath: 解析後統整 CSV 的輸出路徑
+        :param outputCsvPath: 解析後統整 CSV 的輸出路徑
         :param singlePromptCmbOutputDir: 每個 promptID 單獨存檔的目錄
         """
         self.rawCsvPath = Path(rawCsvPath)
-        self.csvOutputPath = Path(csvOutputPath)
+        self.outputCsvPath = Path(outputCsvPath)
         self.singlePromptCmbOutputDir = Path(singlePromptCmbOutputDir)
-        self.singlePromptCmbOutputDir.mkdir(parents=True, exist_ok=True)
-
         logging.info("OutputParser Initialized.")
 
     def doExtractAnswers(self, text: str, batchSize: int) -> List[int]:
@@ -64,13 +62,13 @@ class OutputParser:
 
         return labelResultsList
 
-    def doParse(self) -> Path:
+    def run(self) -> Path:
         """
         讀取推論暫存 CSV，對每一筆任務套用解析，
-        將 items 展開為逐筆資料列，輸出結構化 CSV。
+        將 pairs 展開為逐筆資料列，輸出結構化 CSV。
 
-        Raw CSV 欄位：taskID, model, promptID, rawOutput, items (JSON array)
-        每個 item 必帶 id, label；其餘為自訂欄位。
+        Raw CSV 欄位：taskID, model, promptID, rawOutput, pairs (JSON array)
+        每個 pair 必帶 id, label；其餘為自訂欄位。
 
         輸出欄位：dataID, Model, promptID, trueLabel, predLabel, rawOutput, [自訂欄位...]
 
@@ -83,69 +81,69 @@ class OutputParser:
                 raise ParsingError(f"找不到暫存結果檔案: {self.rawCsvPath}")
 
             rawDf = pd.read_csv(str(self.rawCsvPath), encoding='utf-8-sig')
-            parsedRows = []
+            parsedRowsList = []
 
             for _, taskRow in rawDf.iterrows():
                 model = taskRow.get('model')
                 promptID = taskRow.get('promptID')
                 rawOutput = str(taskRow.get('rawOutput', ''))
 
-                # 讀取 items JSON
-                itemsRaw = taskRow.get('items', '[]')
-                if pd.isna(itemsRaw):
-                    itemsRaw = '[]'
+                # 讀取 pairs JSON
+                pairsRaw = taskRow.get('pairs', '[]')
+                if pd.isna(pairsRaw):
+                    pairsRaw = '[]'
 
                 try:
-                    if isinstance(itemsRaw, str):
-                        itemsList = json.loads(itemsRaw)
-                    elif isinstance(itemsRaw, list):
-                        itemsList = itemsRaw
+                    if isinstance(pairsRaw, str):
+                        pairsList = json.loads(pairsRaw)
+                    elif isinstance(pairsRaw, list):
+                        pairsList = pairsRaw
                     else:
-                        itemsList = []
+                        pairsList = []
                 except Exception as e:
-                    logging.warning(f"Failed to parse items JSON: {e}")
-                    itemsList = []
+                    logging.warning(f"Failed to parse pairs JSON: {e}")
+                    pairsList = []
 
-                if not itemsList:
-                    logging.error(f"Empty items for task (Model: {model}, Prompt: {promptID})")
+                if not pairsList:
+                    logging.error(f"Empty pairs for task (Model: {model}, Prompt: {promptID})")
                     continue
 
-                parsedAnswers = self.doExtractAnswers(rawOutput, len(itemsList))
+                parsedAnswersList = self.doExtractAnswers(rawOutput, len(pairsList))
 
-                for j, item in enumerate(itemsList):
-                    predLabel = parsedAnswers[j] if j < len(parsedAnswers) else -1
+                for j, pair in enumerate(pairsList):
+                    predLabel = parsedAnswersList[j] if j < len(parsedAnswersList) else -1
 
                     rowDict = {
-                        "dataID": item.get('id', ''),
+                        "dataID": pair.get('id', ''),
                         "Model": model,
                         "promptID": promptID,
-                        "trueLabel": item.get('label', ''),
+                        "trueLabel": pair.get('label', ''),
                         "predLabel": predLabel,
                         "rawOutput": rawOutput
                     }
 
                     # 自訂欄位展開（id/label 以外的欄位）
-                    for fieldName, fieldVal in item.items():
+                    for fieldName, fieldVal in pair.items():
                         if fieldName not in ('id', 'label'):
                             rowDict[fieldName] = fieldVal
 
-                    parsedRows.append(rowDict)
+                    parsedRowsList.append(rowDict)
 
-            parsedDf = pd.DataFrame(parsedRows)
+            parsedDf = pd.DataFrame(parsedRowsList)
 
             if parsedDf.empty:
                 raise ParsingError("解析後沒有產生任何有效資料。")
 
             parsedDf = parsedDf.sort_values(['Model', 'promptID', 'dataID'])
-            parsedDf.to_csv(str(self.csvOutputPath), index=False, encoding='utf-8-sig')
+            parsedDf.to_csv(str(self.outputCsvPath), index=False, encoding='utf-8-sig')
 
             for promptID, groupDf in parsedDf.groupby('promptID'):
-                safeName = str(promptID).replace(":", "_").replace("+", "_").replace(" ", "_").replace("/", "_")
-                singlePath = self.singlePromptCmbOutputDir / f"{safeName}_result.csv"
+                safeNameStr = str(promptID).replace(":", "_").replace("+", "_").replace(" ", "_").replace("/", "_")
+                singlePath = self.singlePromptCmbOutputDir / f"{safeNameStr}_result.csv"
                 groupDf.to_csv(singlePath, index=False, encoding='utf-8-sig')
 
-            logging.info(f"Parsing complete: {len(parsedDf)} records -> {self.csvOutputPath}")
-            return self.csvOutputPath
+            logging.info(f"Parsing complete: {len(parsedDf)} records -> {self.outputCsvPath}")
+            return self.outputCsvPath
 
         except ParsingError:
             raise

@@ -1,10 +1,10 @@
-﻿Data_ID,e1,e2,True_Label
-0,famotidine,delirium,1
-2,indomethacin,hypotension,1
-4,idm,hypotension,1
-9,tacrolimus,systemic sclerosis,1
-10,tacrolimus,ssc,1
-19,corticosteroid,systemic sclerosis,1
-20,corticosteroid,ssc,1
-26,cyclosporine,thrombotic microangiopathy,1
-29,corticosteroids,systemic sclerosis,1
+﻿dataID,trueLabel
+0,1
+2,1
+4,1
+9,1
+10,1
+19,1
+20,1
+26,1
+29,1

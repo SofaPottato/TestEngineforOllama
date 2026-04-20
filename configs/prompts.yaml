@@ -29,7 +29,7 @@ prompts:
 #============RAR=================================#EXEPLAINALL
   RAR:
     01: |
-      Rephrase and expand the question, anwd respond
+      Rephrase and expand the question, and respond
     02: |
       Rewrite the provided text into a logical sequence of events describing how [Entity A] affects [Entity B]. Ensure the temporal and causal links are clearly stated in your rewritten version. Finally, use this logical sequence to categorize the relationship
     03: |

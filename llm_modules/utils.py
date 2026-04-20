@@ -1,12 +1,28 @@
 import yaml
+import json
 import logging
 import os
 import random
 import numpy as np
+import pandas as pd
 import sys
 from pathlib import Path
 from typing import Dict, List, Any
-from .schemas import LLMAppConfig
+from .schemas import LLMAppConfig, TaskBuildError
+
+
+def parseJsonField(value: Any, fieldName: str, taskID: str) -> Any:
+    """
+    讀取 Task CSV 時將 JSON 欄位字串轉為 Python 物件。
+    - 字串 → json.loads
+    - None / NaN → 拋 TaskBuildError（空值視為資料錯誤，不靜默通過）
+    - 其他（已是 dict/list）→ 原樣回傳
+    """
+    if isinstance(value, str):
+        return json.loads(value)
+    if value is None or (isinstance(value, float) and pd.isna(value)):
+        raise TaskBuildError(f"Task {taskID} 的欄位 '{fieldName}' 為空。")
+    return value
 
 class ReadLLMConfig:
     """專門負責讀取 LLM 設定檔並驗證型別與路徑"""

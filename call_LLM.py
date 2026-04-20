@@ -6,7 +6,7 @@ from llm_modules.Pipeline import ExperimentPipeline
 
 def startLLMPipeline():
     parser = argparse.ArgumentParser(description="LLM Inference Runner")
-    parser.add_argument('--config', type=str, default='configs/llm_config.yaml', help='Path to YAML configDict file')
+    parser.add_argument('--config', type=str, default='configs/LLM_PPI_config.yaml', help='Path to YAML configDict file')
     args = parser.parse_args()
     initializeGlobalLogger(logDir="./logs", logName=f"testLog.log")
     setupSeed(42)

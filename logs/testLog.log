@@ -348,3 +348,378 @@ Model 'llama3.2:1b' 已啟動專屬排程，最大併發限制: 4
 2026-04-10 16:01:14,933:INFO:============Generating Correctness Heatmap============
 2026-04-10 16:01:15,134:INFO:✅ All results saved to: data\test\output\eval
 2026-04-10 16:01:15,136:INFO:Pipeline completed successfully!
+2026-04-14 14:10:30,925:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-14 14:10:30,927:INFO:Random seed set to 42
+2026-04-14 14:10:30,927:INFO:========================================
+2026-04-14 14:10:30,927:INFO:        Ollama            
+2026-04-14 14:10:30,928:INFO:========================================
+2026-04-14 14:10:30,932:INFO:Initializing ExperimentPipeline()
+2026-04-14 14:10:30,932:INFO:ExperimentPipeline initialized.
+2026-04-14 14:10:30,932:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-14 14:10:30,942:CRITICAL:❌ 發生未預期的錯誤: Task CSV 缺少必要欄位: {'taskID'}
+Traceback (most recent call last):
+  File "c:\Users\s0810\Desktop\Main_LLM\call_LLM.py", line 26, in startLLMPipeline
+    pipeline.run()
+  File "c:\Users\s0810\Desktop\Main_LLM\llm_modules\Pipeline.py", line 194, in run
+    taskDf = self.doLoadTaskCsv()
+             ^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\s0810\Desktop\Main_LLM\llm_modules\Pipeline.py", line 45, in doLoadTaskCsv
+    raise DataLoadError(f"Task CSV 缺少必要欄位: {missing}")
+llm_modules.schemas.DataLoadError: Task CSV 缺少必要欄位: {'taskID'}
+2026-04-14 14:10:50,702:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-14 14:10:50,702:INFO:Random seed set to 42
+2026-04-14 14:10:50,702:INFO:========================================
+2026-04-14 14:10:50,702:INFO:        Ollama            
+2026-04-14 14:10:50,702:INFO:========================================
+2026-04-14 14:10:50,705:INFO:Initializing ExperimentPipeline()
+2026-04-14 14:10:50,705:INFO:ExperimentPipeline initialized.
+2026-04-14 14:10:50,706:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-14 14:10:50,709:INFO:Task CSV loaded: 7 tasks from data\test\tasks.csv
+2026-04-14 14:10:50,725:INFO:==== [Step 2] Building LLM Tasks ====
+2026-04-14 14:10:50,727:INFO:Checkpoint loaded: 14 completed tasks.
+2026-04-14 14:10:50,727:INFO:Skipped 14 previously completed tasks.
+2026-04-14 14:10:50,727:INFO:Built 0 new tasks to run.
+2026-04-14 14:10:50,728:INFO:==== [Step 3] All tasks completed. Skipping inference. ====
+2026-04-14 14:10:50,728:INFO:==== [Step 4] Parsing LLM Outputs ====
+2026-04-14 14:10:50,728:INFO:OutputParser Initialized.
+2026-04-14 14:10:50,728:INFO:==== [OutputParser] Parsing LLM Outputs & Building CSV ====
+2026-04-14 14:10:50,742:INFO:Parsing complete: 60 records -> data\test\output\result.csv
+2026-04-14 14:10:50,742:INFO:==== [Step 5] Processing Results ====
+2026-04-14 14:10:50,742:INFO:LLMResultProcessor initialized. Input: data\test\output\result.csv
+2026-04-14 14:10:50,742:INFO:Processing data: data\test\output\result.csv
+2026-04-14 14:10:50,743:INFO:Data loaded. Shape: (60, 8)
+2026-04-14 14:10:50,744:INFO:Converting True Labels...
+2026-04-14 14:10:50,745:INFO:Pivoting table (Long to Wide)...
+2026-04-14 14:10:50,754:INFO:Pivot completed. Shape: (30, 6)
+2026-04-14 14:10:50,756:INFO:Full info saved to: data\test\output\fullInfo.csv
+2026-04-14 14:10:50,756:INFO:Processing complete!
+2026-04-14 14:10:50,756:INFO:  - Shape: (30, 6)
+2026-04-14 14:10:50,756:INFO:  - Parse rate: 60/60 (100.0%)
+2026-04-14 14:10:50,757:INFO:  - Saved to: data\test\output\partialInfo.csv
+2026-04-14 14:10:50,757:INFO:==== [Step 6] Evaluating ====
+2026-04-14 14:10:50,759:INFO:LLMEvaluationSystem(inputCsvPath='data\test\output\partialInfo.csv', df_shape=(30, 4), pred_cols_count=2)
+2026-04-14 14:10:50,759:INFO:System Initialized. Output directory: data\test\output\eval
+2026-04-14 14:10:50,773:INFO:Difficulty Analysis Complete. Upper Bound: 70.00% (Found 9 hard samples)
+2026-04-14 14:10:50,773:INFO:============Generating Confusion Matrices============
+2026-04-14 14:10:51,553:INFO:============Generating Correctness Heatmap============
+2026-04-14 14:10:51,772:INFO:✅ All results saved to: data\test\output\eval
+2026-04-14 14:10:51,772:INFO:Pipeline completed successfully!
+2026-04-14 14:11:24,424:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-14 14:11:24,425:INFO:Random seed set to 42
+2026-04-14 14:11:24,425:INFO:========================================
+2026-04-14 14:11:24,425:INFO:        Ollama            
+2026-04-14 14:11:24,425:INFO:========================================
+2026-04-14 14:11:24,429:INFO:Initializing ExperimentPipeline()
+2026-04-14 14:11:24,429:INFO:ExperimentPipeline initialized.
+2026-04-14 14:11:24,429:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-14 14:11:24,432:INFO:Task CSV loaded: 7 tasks from data\test\tasks.csv
+2026-04-14 14:11:24,435:INFO:==== [Step 2] Building LLM Tasks ====
+2026-04-14 14:11:24,435:INFO:Built 14 new tasks to run.
+2026-04-14 14:11:24,436:INFO:==== [Step 3] Running Inference (14 tasks) ====
+2026-04-14 14:11:24,561:INFO:Dispatching 14 tasks to async engine...
+2026-04-14 14:11:24,562:INFO:開始推論！共 14 筆任務批次。
+2026-04-14 14:11:24,563:INFO:偵測到 1 種模型: llama3.2:1b
+2026-04-14 14:11:24,563:INFO:允許同時運行的最大模型數量 (maxConcurrentModels): 1
+2026-04-14 14:11:24,563:INFO:每個模型最大併發限制 (concurrencyPerModel): 4
+2026-04-14 14:11:24,565:INFO:模型 [llama3.2:1b] 取得執行許可，開始處理 14 筆任務...
+2026-04-14 14:11:24,565:INFO:
+Model 'llama3.2:1b' 已啟動專屬排程，最大併發限制: 4
+2026-04-14 14:11:31,039:INFO:模型 [llama3.2:1b] 的任務已全數處理完畢，釋放模型許可。
+2026-04-14 14:11:31,042:INFO:Inference complete. Raw output saved to: data\test\output\raw.csv
+2026-04-14 14:11:31,043:INFO:==== [Step 4] Parsing LLM Outputs ====
+2026-04-14 14:11:31,043:INFO:OutputParser Initialized.
+2026-04-14 14:11:31,043:INFO:==== [OutputParser] Parsing LLM Outputs & Building CSV ====
+2026-04-14 14:11:31,049:INFO:Parsing complete: 60 records -> data\test\output\result.csv
+2026-04-14 14:11:31,051:INFO:==== [Step 5] Processing Results ====
+2026-04-14 14:11:31,051:INFO:LLMResultProcessor initialized. Input: data\test\output\result.csv
+2026-04-14 14:11:31,051:INFO:Processing data: data\test\output\result.csv
+2026-04-14 14:11:31,052:INFO:Data loaded. Shape: (60, 8)
+2026-04-14 14:11:31,052:INFO:Converting True Labels...
+2026-04-14 14:11:31,053:INFO:Pivoting table (Long to Wide)...
+2026-04-14 14:11:31,060:INFO:Pivot completed. Shape: (30, 6)
+2026-04-14 14:11:31,062:INFO:Full info saved to: data\test\output\fullInfo.csv
+2026-04-14 14:11:31,062:INFO:Processing complete!
+2026-04-14 14:11:31,063:INFO:  - Shape: (30, 6)
+2026-04-14 14:11:31,063:INFO:  - Parse rate: 60/60 (100.0%)
+2026-04-14 14:11:31,063:INFO:  - Saved to: data\test\output\partialInfo.csv
+2026-04-14 14:11:31,063:INFO:==== [Step 6] Evaluating ====
+2026-04-14 14:11:31,065:INFO:LLMEvaluationSystem(inputCsvPath='data\test\output\partialInfo.csv', df_shape=(30, 4), pred_cols_count=2)
+2026-04-14 14:11:31,065:INFO:System Initialized. Output directory: data\test\output\eval
+2026-04-14 14:11:31,076:INFO:Difficulty Analysis Complete. Upper Bound: 70.00% (Found 9 hard samples)
+2026-04-14 14:11:31,076:INFO:============Generating Confusion Matrices============
+2026-04-14 14:11:31,384:INFO:============Generating Correctness Heatmap============
+2026-04-14 14:11:31,611:INFO:✅ All results saved to: data\test\output\eval
+2026-04-14 14:11:31,611:INFO:Pipeline completed successfully!
+2026-04-17 11:15:30,442:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-17 11:15:30,443:INFO:Random seed set to 42
+2026-04-17 11:15:30,443:INFO:========================================
+2026-04-17 11:15:30,443:INFO:        Ollama            
+2026-04-17 11:15:30,443:INFO:========================================
+2026-04-17 11:15:30,451:INFO:Initializing ExperimentPipeline()
+2026-04-17 11:15:30,452:INFO:ExperimentPipeline initialized.
+2026-04-17 11:15:30,452:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-17 11:15:30,492:INFO:Task CSV loaded: 1500 tasks from data\test\tasks.csv
+2026-04-17 11:15:31,121:INFO:Prompt preview saved: 10954 entries -> data\test\output\prompt_preview.csv
+2026-04-17 11:15:31,127:INFO:==== [Step 2] Building LLM Tasks ====
+2026-04-17 11:15:31,136:INFO:Checkpoint loaded: 14 completed tasks.
+2026-04-17 11:15:31,457:INFO:Skipped 10 previously completed tasks.
+2026-04-17 11:15:31,459:INFO:Built 10944 new tasks to run.
+2026-04-17 11:15:31,461:INFO:==== [Step 3] Running Inference (10944 tasks) ====
+2026-04-17 11:15:31,643:INFO:Dispatching 10944 tasks to async engine...
+2026-04-17 11:15:31,696:INFO:開始推論！共 10944 筆任務批次。
+2026-04-17 11:15:31,696:INFO:偵測到 1 種模型: llama3.2:1b
+2026-04-17 11:15:31,696:INFO:允許同時運行的最大模型數量 (maxConcurrentModels): 1
+2026-04-17 11:15:31,696:INFO:每個模型最大併發限制 (concurrencyPerModel): 4
+2026-04-17 11:15:31,699:INFO:模型 [llama3.2:1b] 取得執行許可，開始處理 10944 筆任務...
+2026-04-17 11:15:31,835:INFO:
+Model 'llama3.2:1b' 已啟動專屬排程，最大併發限制: 4
+2026-04-17 11:17:32,748:WARNING:⚠️ 模型 llama3.2:1b 連線異常或逾時: Server disconnected without sending a response.
+2026-04-17 11:17:32,749:WARNING:⚠️ 模型 llama3.2:1b 連線異常或逾時: Server disconnected without sending a response.
+2026-04-17 11:17:32,753:WARNING:⚠️ 模型 llama3.2:1b 連線異常或逾時: Server disconnected without sending a response.
+2026-04-17 11:17:32,754:WARNING:⚠️ 模型 llama3.2:1b 連線異常或逾時: Server disconnected without sending a response.
+2026-04-17 11:17:36,065:WARNING:⚠️ 模型 llama3.2:1b 連線異常或逾時: All connection attempts failed
+2026-04-17 11:17:36,066:WARNING:⚠️ 模型 llama3.2:1b 連線異常或逾時: All connection attempts failed
+2026-04-17 11:17:36,067:WARNING:⚠️ 模型 llama3.2:1b 連線異常或逾時: All connection attempts failed
+2026-04-17 11:17:36,067:WARNING:⚠️ 模型 llama3.2:1b 連線異常或逾時: All connection attempts failed
+2026-04-17 11:19:58,329:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-17 11:19:58,330:INFO:Random seed set to 42
+2026-04-17 11:19:58,330:INFO:========================================
+2026-04-17 11:19:58,330:INFO:        Ollama            
+2026-04-17 11:19:58,330:INFO:========================================
+2026-04-17 11:19:58,334:INFO:Initializing ExperimentPipeline()
+2026-04-17 11:19:58,334:INFO:ExperimentPipeline initialized.
+2026-04-17 11:19:58,335:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-17 11:19:58,366:INFO:Task CSV loaded: 1500 tasks from data\test\tasks.csv
+2026-04-17 11:19:58,687:INFO:Prompt preview saved: 6228 entries -> data\test\output\prompt_preview.csv
+2026-04-17 11:19:58,692:INFO:==== [Step 2] Building LLM Tasks ====
+2026-04-17 11:19:58,706:INFO:Checkpoint loaded: 539 completed tasks.
+2026-04-17 11:19:58,861:INFO:Skipped 260 previously completed tasks.
+2026-04-17 11:19:58,861:INFO:Built 5968 new tasks to run.
+2026-04-17 11:19:58,864:INFO:==== [Step 3] Running Inference (5968 tasks) ====
+2026-04-17 11:19:58,964:INFO:Dispatching 5968 tasks to async engine...
+2026-04-17 11:19:59,043:INFO:開始推論！共 5968 筆任務批次。
+2026-04-17 11:19:59,043:INFO:偵測到 1 種模型: llama3.2:1b
+2026-04-17 11:19:59,043:INFO:允許同時運行的最大模型數量 (maxConcurrentModels): 1
+2026-04-17 11:19:59,043:INFO:每個模型最大併發限制 (concurrencyPerModel): 2
+2026-04-17 11:19:59,045:INFO:模型 [llama3.2:1b] 取得執行許可，開始處理 5968 筆任務...
+2026-04-17 11:19:59,073:INFO:
+Model 'llama3.2:1b' 已啟動專屬排程，最大併發限制: 2
+2026-04-17 11:21:43,200:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-17 11:21:43,200:INFO:Random seed set to 42
+2026-04-17 11:21:43,200:INFO:========================================
+2026-04-17 11:21:43,201:INFO:        Ollama            
+2026-04-17 11:21:43,201:INFO:========================================
+2026-04-17 11:21:43,203:INFO:Initializing ExperimentPipeline()
+2026-04-17 11:21:43,203:INFO:ExperimentPipeline initialized.
+2026-04-17 11:21:43,204:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-17 11:21:43,235:INFO:Task CSV loaded: 1500 tasks from data\test\tasks.csv
+2026-04-17 11:21:43,527:INFO:Prompt preview saved: 6228 entries -> data\test\output\prompt_preview.csv
+2026-04-17 11:21:43,530:INFO:==== [Step 2] Building LLM Tasks ====
+2026-04-17 11:21:43,549:INFO:Checkpoint loaded: 777 completed tasks.
+2026-04-17 11:21:43,695:INFO:Skipped 498 previously completed tasks.
+2026-04-17 11:21:43,695:INFO:Built 5730 new tasks to run.
+2026-04-17 11:21:43,697:INFO:==== [Step 3] Running Inference (5730 tasks) ====
+2026-04-17 11:21:43,767:INFO:Dispatching 5730 tasks to async engine...
+2026-04-17 11:21:43,842:INFO:開始推論！共 5730 筆任務批次。
+2026-04-17 11:21:43,842:INFO:偵測到 1 種模型: llama3.2:1b
+2026-04-17 11:21:43,842:INFO:允許同時運行的最大模型數量 (maxConcurrentModels): 1
+2026-04-17 11:21:43,843:INFO:每個模型最大併發限制 (concurrencyPerModel): 2
+2026-04-17 11:21:43,844:INFO:模型 [llama3.2:1b] 取得執行許可，開始處理 5730 筆任務...
+2026-04-17 11:21:43,861:INFO:
+Model 'llama3.2:1b' 已啟動專屬排程，最大併發限制: 2
+2026-04-17 11:55:53,534:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-17 11:55:53,534:INFO:Random seed set to 42
+2026-04-17 11:55:53,535:INFO:========================================
+2026-04-17 11:55:53,535:INFO:        Ollama            
+2026-04-17 11:55:53,535:INFO:========================================
+2026-04-17 11:55:53,540:INFO:Initializing ExperimentPipeline()
+2026-04-17 11:55:53,540:INFO:ExperimentPipeline initialized.
+2026-04-17 11:55:53,541:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-17 11:55:53,573:INFO:Task CSV loaded: 1500 tasks from data\test\tasks.csv
+2026-04-17 11:55:53,851:INFO:Prompt preview saved: 6228 entries -> data\test\output\prompt_preview.csv
+2026-04-17 11:55:53,855:INFO:==== [Step 2] Building LLM Tasks ====
+2026-04-17 11:55:53,878:INFO:Checkpoint loaded: 1043 completed tasks.
+2026-04-17 11:55:54,008:INFO:Skipped 764 previously completed tasks.
+2026-04-17 11:55:54,009:INFO:Built 5464 new tasks to run.
+2026-04-17 11:55:54,010:INFO:==== [Step 3] Running Inference (5464 tasks) ====
+2026-04-17 11:55:54,087:INFO:Dispatching 5464 tasks to async engine...
+2026-04-17 11:55:54,158:INFO:開始推論！共 5464 筆任務批次。
+2026-04-17 11:55:54,158:INFO:偵測到 1 種模型: llama3.2:1b
+2026-04-17 11:55:54,158:INFO:允許同時運行的最大模型數量 (maxConcurrentModels): 1
+2026-04-17 11:55:54,159:INFO:每個模型最大併發限制 (concurrencyPerModel): 2
+2026-04-17 11:55:54,160:INFO:模型 [llama3.2:1b] 取得執行許可，開始處理 5464 筆任務...
+2026-04-17 11:55:54,175:INFO:
+Model 'llama3.2:1b' 已啟動專屬排程，最大併發限制: 2
+2026-04-20 11:00:42,843:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-20 11:00:42,843:INFO:Random seed set to 42
+2026-04-20 11:00:42,843:INFO:========================================
+2026-04-20 11:00:42,843:INFO:        Ollama            
+2026-04-20 11:00:42,843:INFO:========================================
+2026-04-20 11:00:42,849:INFO:Initializing ExperimentPipeline()
+2026-04-20 11:00:42,849:INFO:ExperimentPipeline initialized.
+2026-04-20 11:00:42,849:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-20 11:00:42,891:INFO:Task CSV loaded: 1500 tasks from data\test\tasks.csv
+2026-04-20 11:00:42,891:CRITICAL:❌ 發生未預期的錯誤: Prompt CSV 缺少 'promptID' 或 'promptText' 欄位。
+Traceback (most recent call last):
+  File "c:\Users\s0810\Desktop\Main_LLM\call_LLM.py", line 26, in startLLMPipeline
+    pipeline.run()
+  File "c:\Users\s0810\Desktop\Main_LLM\llm_modules\Pipeline.py", line 222, in run
+    promptCmbList = self.doLoadPromptCmb()
+                    ^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\s0810\Desktop\Main_LLM\llm_modules\Pipeline.py", line 65, in doLoadPromptCmb
+    raise DataLoadError("Prompt CSV 缺少 'promptID' 或 'promptText' 欄位。")
+llm_modules.schemas.DataLoadError: Prompt CSV 缺少 'promptID' 或 'promptText' 欄位。
+2026-04-20 11:01:15,296:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-20 11:01:15,300:INFO:Random seed set to 42
+2026-04-20 11:01:15,300:INFO:========================================
+2026-04-20 11:01:15,300:INFO:        Ollama            
+2026-04-20 11:01:15,300:INFO:========================================
+2026-04-20 11:01:15,305:INFO:Initializing ExperimentPipeline()
+2026-04-20 11:01:15,306:INFO:ExperimentPipeline initialized.
+2026-04-20 11:01:15,306:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-20 11:01:15,349:INFO:Task CSV loaded: 1500 tasks from data\test\tasks.csv
+2026-04-20 11:01:15,622:INFO:Prompt preview saved: 6228 entries -> data\testv1v\output\prompt_preview.csv
+2026-04-20 11:01:15,626:INFO:==== [Step 2] Building LLM Tasks ====
+2026-04-20 11:01:15,746:INFO:Built 6228 new tasks to run.
+2026-04-20 11:01:15,746:INFO:==== [Step 3] Running Inference (6228 tasks) ====
+2026-04-20 11:01:15,871:INFO:Dispatching 6228 tasks to async engine...
+2026-04-20 11:01:15,954:INFO:開始推論！共 6228 筆任務批次。
+2026-04-20 11:01:15,954:INFO:偵測到 1 種模型: llama3.2:1b
+2026-04-20 11:01:15,954:INFO:允許同時運行的最大模型數量 (maxConcurrentModels): 1
+2026-04-20 11:01:15,954:INFO:每個模型最大併發限制 (concurrencyPerModel): 2
+2026-04-20 11:01:15,954:INFO:模型 [llama3.2:1b] 取得執行許可，開始處理 6228 筆任務...
+2026-04-20 11:01:15,974:INFO:
+Model 'llama3.2:1b' 已啟動專屬排程，最大併發限制: 2
+2026-04-20 12:16:15,820:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-20 12:16:15,820:INFO:Random seed set to 42
+2026-04-20 12:16:15,820:INFO:========================================
+2026-04-20 12:16:15,820:INFO:        Ollama            
+2026-04-20 12:16:15,820:INFO:========================================
+2026-04-20 12:16:15,825:INFO:Initializing ExperimentPipeline()
+2026-04-20 12:16:15,825:INFO:ExperimentPipeline initialized.
+2026-04-20 12:16:15,825:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-20 12:16:15,829:INFO:Task CSV loaded: 269 tasks from data\PPI\LLL\LLL-tasks.csv
+2026-04-20 12:16:15,862:INFO:Prompt preview saved: 538 entries -> data\PPI\LLL\output\prompt_preview.csv
+2026-04-20 12:16:15,863:INFO:==== [Step 2] Building LLM Tasks ====
+2026-04-20 12:16:15,875:INFO:Built 538 new tasks to run.
+2026-04-20 12:16:15,875:INFO:==== [Step 3] Running Inference (538 tasks) ====
+2026-04-20 12:16:15,962:INFO:Dispatching 538 tasks to async engine...
+2026-04-20 12:16:15,964:INFO:開始推論！共 538 筆任務批次。
+2026-04-20 12:16:15,964:INFO:偵測到 1 種模型: llama3.2:1b
+2026-04-20 12:16:15,964:INFO:允許同時運行的最大模型數量 (maxConcurrentModels): 1
+2026-04-20 12:16:15,964:INFO:每個模型最大併發限制 (concurrencyPerModel): 2
+2026-04-20 12:16:15,966:INFO:模型 [llama3.2:1b] 取得執行許可，開始處理 538 筆任務...
+2026-04-20 12:16:15,969:INFO:
+Model 'llama3.2:1b' 已啟動專屬排程，最大併發限制: 2
+2026-04-20 12:18:19,836:INFO:模型 [llama3.2:1b] 的任務已全數處理完畢，釋放模型許可。
+2026-04-20 12:18:19,837:INFO:Inference complete. Raw output saved to: data\PPI\LLL\output\raw.csv
+2026-04-20 12:18:19,837:INFO:==== [Step 4] Parsing LLM Outputs ====
+2026-04-20 12:18:19,837:INFO:OutputParser Initialized.
+2026-04-20 12:18:19,837:INFO:==== [OutputParser] Parsing LLM Outputs & Building CSV ====
+2026-04-20 12:18:19,873:INFO:Parsing complete: 538 records -> data\PPI\LLL\output\result.csv
+2026-04-20 12:18:19,873:INFO:==== [Step 5] Processing Results ====
+2026-04-20 12:18:19,873:INFO:LLMResultProcessor initialized. Input: data\PPI\LLL\output\result.csv
+2026-04-20 12:18:19,873:INFO:Processing data: data\PPI\LLL\output\result.csv
+2026-04-20 12:18:19,876:INFO:Data loaded. Shape: (538, 8)
+2026-04-20 12:18:19,876:INFO:Converting True Labels...
+2026-04-20 12:18:19,877:INFO:Pivoting table (Long to Wide)...
+2026-04-20 12:18:19,888:INFO:Pivot completed. Shape: (269, 6)
+2026-04-20 12:18:19,892:INFO:Full info saved to: data\PPI\LLL\output\fullInfo.csv
+2026-04-20 12:18:19,892:INFO:Processing complete!
+2026-04-20 12:18:19,892:INFO:  - Shape: (269, 6)
+2026-04-20 12:18:19,892:INFO:  - Parse rate: 538/538 (100.0%)
+2026-04-20 12:18:19,892:INFO:  - Saved to: data\PPI\LLL\output\partialInfo.csv
+2026-04-20 12:18:19,892:INFO:==== [Step 6] Evaluating ====
+2026-04-20 12:18:19,894:INFO:LLMEvaluationSystem(inputCsvPath='data\PPI\LLL\output\partialInfo.csv', df_shape=(269, 4), pred_cols_count=2)
+2026-04-20 12:18:19,895:INFO:System Initialized. Output directory: data\PPI\LLL\output\eval
+2026-04-20 12:18:19,911:INFO:Difficulty Analysis Complete. Upper Bound: 50.56% (Found 133 hard samples)
+2026-04-20 12:18:19,911:INFO:============Generating Confusion Matrices============
+2026-04-20 12:18:20,726:INFO:============Generating Correctness Heatmap============
+2026-04-20 12:18:21,031:INFO:✅ All results saved to: data\PPI\LLL\output\eval
+2026-04-20 12:18:21,031:INFO:Pipeline completed successfully!
+2026-04-20 12:21:52,533:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-20 12:21:52,533:INFO:Random seed set to 42
+2026-04-20 12:21:52,533:INFO:========================================
+2026-04-20 12:21:52,533:INFO:        Ollama            
+2026-04-20 12:21:52,533:INFO:========================================
+2026-04-20 12:21:52,537:INFO:Initializing ExperimentPipeline()
+2026-04-20 12:21:52,537:INFO:ExperimentPipeline initialized.
+2026-04-20 12:21:52,537:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-20 12:21:52,541:INFO:Task CSV loaded: 269 tasks from data\PPI\LLL\LLL-tasks.csv
+2026-04-20 12:21:52,558:INFO:Prompt preview saved: 538 entries -> data\PPI\LLL\output\prompt_preview.csv
+2026-04-20 12:21:52,558:INFO:==== [Step 2] Building LLM Tasks ====
+2026-04-20 12:21:52,565:INFO:Checkpoint loaded: 538 completed tasks.
+2026-04-20 12:21:52,573:INFO:Skipped 538 previously completed tasks.
+2026-04-20 12:21:52,573:INFO:Built 0 new tasks to run.
+2026-04-20 12:21:52,573:INFO:==== [Step 3] All tasks completed. Skipping inference. ====
+2026-04-20 12:21:52,573:INFO:==== [Step 4] Parsing LLM Outputs ====
+2026-04-20 12:21:52,573:INFO:OutputParser Initialized.
+2026-04-20 12:21:52,575:INFO:==== [OutputParser] Parsing LLM Outputs & Building CSV ====
+2026-04-20 12:21:52,604:INFO:Parsing complete: 538 records -> data\PPI\LLL\output\result.csv
+2026-04-20 12:21:52,604:INFO:==== [Step 5] Processing Results ====
+2026-04-20 12:21:52,604:INFO:LLMResultProcessor initialized. Input: data\PPI\LLL\output\result.csv
+2026-04-20 12:21:52,604:INFO:Processing data: data\PPI\LLL\output\result.csv
+2026-04-20 12:21:52,606:INFO:Data loaded. Shape: (538, 8)
+2026-04-20 12:21:52,606:INFO:Converting True Labels...
+2026-04-20 12:21:52,607:INFO:Pivoting table (Long to Wide)...
+2026-04-20 12:21:52,613:INFO:Pivot completed. Shape: (269, 6)
+2026-04-20 12:21:52,620:INFO:Full info saved to: data\PPI\LLL\output\fullInfo.csv
+2026-04-20 12:21:52,620:INFO:Processing complete!
+2026-04-20 12:21:52,621:INFO:  - Shape: (269, 6)
+2026-04-20 12:21:52,621:INFO:  - Parse rate: 538/538 (100.0%)
+2026-04-20 12:21:52,621:INFO:  - Saved to: data\PPI\LLL\output\partialInfo.csv
+2026-04-20 12:21:52,621:INFO:==== [Step 6] Evaluating ====
+2026-04-20 12:21:52,627:INFO:LLMEvaluationSystem(inputCsvPath='data\PPI\LLL\output\partialInfo.csv', df_shape=(269, 4), pred_cols_count=2)
+2026-04-20 12:21:52,627:INFO:System Initialized. Output directory: data\PPI\LLL\output\eval
+2026-04-20 12:21:52,650:INFO:Difficulty Analysis Complete. Upper Bound: 50.56% (Found 133 hard samples)
+2026-04-20 12:21:52,650:INFO:============Generating Confusion Matrices============
+2026-04-20 12:21:53,004:INFO:============Generating Correctness Heatmap============
+2026-04-20 12:21:53,273:INFO:✅ All results saved to: data\PPI\LLL\output\eval
+2026-04-20 12:21:53,274:INFO:Pipeline completed successfully!
+2026-04-20 12:22:09,345:INFO:📝 Logger initialized. Writing to ./logs\testLog.log
+2026-04-20 12:22:09,345:INFO:Random seed set to 42
+2026-04-20 12:22:09,345:INFO:========================================
+2026-04-20 12:22:09,345:INFO:        Ollama            
+2026-04-20 12:22:09,345:INFO:========================================
+2026-04-20 12:22:09,349:INFO:Initializing ExperimentPipeline()
+2026-04-20 12:22:09,349:INFO:ExperimentPipeline initialized.
+2026-04-20 12:22:09,349:INFO:==== [Step 1] Loading Task CSV & Prompts ====
+2026-04-20 12:22:09,353:INFO:Task CSV loaded: 269 tasks from data\PPI\LLL\LLL-tasks.csv
+2026-04-20 12:22:09,371:INFO:Prompt preview saved: 538 entries -> data\PPI\LLL\output\prompt_preview.csv
+2026-04-20 12:22:09,372:INFO:==== [Step 2] Building LLM Tasks ====
+2026-04-20 12:22:09,383:INFO:Built 538 new tasks to run.
+2026-04-20 12:22:09,383:INFO:==== [Step 3] Running Inference (538 tasks) ====
+2026-04-20 12:22:09,454:INFO:Dispatching 538 tasks to async engine...
+2026-04-20 12:22:09,457:INFO:開始推論！共 538 筆任務批次。
+2026-04-20 12:22:09,457:INFO:偵測到 1 種模型: llama3.2:1b
+2026-04-20 12:22:09,457:INFO:允許同時運行的最大模型數量 (maxConcurrentModels): 1
+2026-04-20 12:22:09,457:INFO:每個模型最大併發限制 (concurrencyPerModel): 2
+2026-04-20 12:22:09,459:INFO:模型 [llama3.2:1b] 取得執行許可，開始處理 538 筆任務...
+2026-04-20 12:22:09,460:INFO:
+Model 'llama3.2:1b' 已啟動專屬排程，最大併發限制: 2
+2026-04-20 12:23:40,314:INFO:模型 [llama3.2:1b] 的任務已全數處理完畢，釋放模型許可。
+2026-04-20 12:23:40,316:INFO:Inference complete. Raw output saved to: data\PPI\LLL\output\raw.csv
+2026-04-20 12:23:40,316:INFO:==== [Step 4] Parsing LLM Outputs ====
+2026-04-20 12:23:40,317:INFO:OutputParser Initialized.
+2026-04-20 12:23:40,317:INFO:==== [OutputParser] Parsing LLM Outputs & Building CSV ====
+2026-04-20 12:23:40,386:INFO:Parsing complete: 538 records -> data\PPI\LLL\output\result.csv
+2026-04-20 12:23:40,386:INFO:==== [Step 5] Processing Results ====
+2026-04-20 12:23:40,387:INFO:LLMResultProcessor initialized. Input: data\PPI\LLL\output\result.csv
+2026-04-20 12:23:40,387:INFO:Processing data: data\PPI\LLL\output\result.csv
+2026-04-20 12:23:40,389:INFO:Data loaded. Shape: (538, 8)
+2026-04-20 12:23:40,389:INFO:Converting True Labels...
+2026-04-20 12:23:40,392:INFO:Pivoting table (Long to Wide)...
+2026-04-20 12:23:40,403:INFO:Pivot completed. Shape: (269, 6)
+2026-04-20 12:23:40,407:INFO:Full info saved to: data\PPI\LLL\output\fullInfo.csv
+2026-04-20 12:23:40,408:INFO:Processing complete!
+2026-04-20 12:23:40,408:INFO:  - Shape: (269, 6)
+2026-04-20 12:23:40,408:INFO:  - Parse rate: 538/538 (100.0%)
+2026-04-20 12:23:40,408:INFO:  - Saved to: data\PPI\LLL\output\partialInfo.csv
+2026-04-20 12:23:40,408:INFO:==== [Step 6] Evaluating ====
+2026-04-20 12:23:40,412:INFO:LLMEvaluationSystem(inputCsvPath='data\PPI\LLL\output\partialInfo.csv', df_shape=(269, 4), pred_cols_count=2)
+2026-04-20 12:23:40,413:INFO:System Initialized. Output directory: data\PPI\LLL\output\eval
+2026-04-20 12:23:40,436:INFO:Difficulty Analysis Complete. Upper Bound: 50.19% (Found 134 hard samples)
+2026-04-20 12:23:40,437:INFO:============Generating Confusion Matrices============
+2026-04-20 12:23:41,009:INFO:============Generating Correctness Heatmap============
+2026-04-20 12:23:41,574:INFO:✅ All results saved to: data\PPI\LLL\output\eval
+2026-04-20 12:23:41,574:INFO:Pipeline completed successfully!

@@ -1,0 +1,167 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1050" font-family="'Segoe UI', Arial, sans-serif">
+  <!-- Background -->
+  <rect width="900" height="1050" fill="#f8f9fb" rx="12"/>
+
+  <!-- Title -->
+  <text x="450" y="40" text-anchor="middle" font-size="20" font-weight="bold" fill="#1a1a2e">Main_LLM — 專案流程總覽</text>
+  <text x="450" y="62" text-anchor="middle" font-size="12" fill="#666">BC5CDR 化學-疾病關係分類 · 本地 LLM 推論</text>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 0: Raw Data -->
+  <!-- ══════════════════════════════════════════ -->
+  <rect x="60" y="85" width="780" height="90" rx="10" fill="#fff" stroke="#c8d6e5" stroke-width="1.5"/>
+  <rect x="60" y="85" width="6" height="90" rx="3" fill="#4a90d9"/>
+  <text x="82" y="108" font-size="11" font-weight="bold" fill="#4a90d9">STEP 0 — 原始資料 (BC5CDR Dataset)</text>
+  <text x="82" y="128" font-size="11" fill="#333">CSV 格式：每列 = 一對實體關係</text>
+  <!-- mini table -->
+  <rect x="82" y="138" width="710" height="28" rx="4" fill="#eef4fb"/>
+  <text x="92" y="155" font-size="10" fill="#555" font-family="monospace">PMID │ Title │ Abstract │ E1_Name (化學物) │ E2_Name (疾病) │ Relation_Type (CID / 0)</text>
+
+  <!-- Arrow 0→1 -->
+  <line x1="450" y1="175" x2="450" y2="198" stroke="#aaa" stroke-width="2" marker-end="url(#arr)"/>
+  <rect x="340" y="178" width="220" height="18" rx="9" fill="#fff3cd"/>
+  <text x="450" y="191" text-anchor="middle" font-size="10" fill="#856404">preprocess/bc5cdr.py  ·  按 PMID 分組</text>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 1: Task CSV -->
+  <!-- ══════════════════════════════════════════ -->
+  <rect x="60" y="200" width="780" height="80" rx="10" fill="#fff" stroke="#c8d6e5" stroke-width="1.5"/>
+  <rect x="60" y="200" width="6" height="80" rx="3" fill="#27ae60"/>
+  <text x="82" y="222" font-size="11" font-weight="bold" fill="#27ae60">STEP 1 — Task CSV (data/tasks.csv)</text>
+  <text x="82" y="240" font-size="11" fill="#333">每列 = 一篇論文，pairs 欄位彙整同篇的所有實體對</text>
+  <rect x="82" y="248" width="710" height="24" rx="4" fill="#eafaf1"/>
+  <text x="92" y="264" font-size="10" fill="#555" font-family="monospace">taskID (PMID) │ title │ abstract │ pairs: [{id, e1, e2, label}, ...]</text>
+
+  <!-- Arrow 1→2 -->
+  <line x1="450" y1="280" x2="450" y2="308" stroke="#aaa" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 2: Config loading (side inputs) -->
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Prompt box -->
+  <rect x="60" y="310" width="240" height="100" rx="10" fill="#fff" stroke="#c8d6e5" stroke-width="1.5"/>
+  <rect x="60" y="310" width="6" height="100" rx="3" fill="#8e44ad"/>
+  <text x="82" y="330" font-size="10" font-weight="bold" fill="#8e44ad">configs/prompts.yaml</text>
+  <text x="82" y="346" font-size="10" fill="#555">多個 Prompt 模板 ID</text>
+  <text x="82" y="362" font-size="10" fill="#777">e.g. S2A01, RE201, EMO01…</text>
+  <text x="82" y="378" font-size="10" fill="#777">含 {title} {abstract} {pairs}</text>
+  <text x="82" y="394" font-size="10" fill="#777">佔位符，由 PromptFormatter 填入</text>
+
+  <!-- LLM Config box -->
+  <rect x="330" y="310" width="240" height="100" rx="10" fill="#fff" stroke="#c8d6e5" stroke-width="1.5"/>
+  <rect x="330" y="310" width="6" height="100" rx="3" fill="#e67e22"/>
+  <text x="352" y="330" font-size="10" font-weight="bold" fill="#e67e22">configs/llm_config.yaml</text>
+  <text x="352" y="346" font-size="10" fill="#555">selectedModels 清單</text>
+  <text x="352" y="362" font-size="10" fill="#777">e.g. llama3.2:1b, gemma…</text>
+  <text x="352" y="378" font-size="10" fill="#777">taskTemplate / pairTemplate</text>
+  <text x="352" y="394" font-size="10" fill="#777">label mapping (CID→1, 0→0)</text>
+
+  <!-- Tasks box -->
+  <rect x="600" y="310" width="240" height="100" rx="10" fill="#fff" stroke="#c8d6e5" stroke-width="1.5"/>
+  <rect x="600" y="310" width="6" height="100" rx="3" fill="#27ae60"/>
+  <text x="622" y="330" font-size="10" font-weight="bold" fill="#27ae60">data/tasks.csv</text>
+  <text x="622" y="346" font-size="10" fill="#555">來自 STEP 1</text>
+  <text x="622" y="362" font-size="10" fill="#777">N 篇論文 × M 個 pairs</text>
+
+  <!-- converge arrows -->
+  <line x1="180" y1="410" x2="180" y2="438" stroke="#aaa" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="450" y1="410" x2="450" y2="438" stroke="#aaa" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="720" y1="410" x2="720" y2="438" stroke="#aaa" stroke-width="1.5" marker-end="url(#arr)"/>
+  <line x1="180" y1="438" x2="720" y2="438" stroke="#aaa" stroke-width="1.5"/>
+  <line x1="450" y1="438" x2="450" y2="455" stroke="#aaa" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 3: Pipeline core -->
+  <!-- ══════════════════════════════════════════ -->
+  <rect x="60" y="457" width="780" height="72" rx="10" fill="#fff" stroke="#c8d6e5" stroke-width="1.5"/>
+  <rect x="60" y="457" width="6" height="72" rx="3" fill="#e74c3c"/>
+  <text x="82" y="478" font-size="11" font-weight="bold" fill="#e74c3c">STEP 3 — Pipeline 任務生成 (llm_modules/Pipeline.py)</text>
+  <text x="82" y="496" font-size="11" fill="#333">笛卡爾積：Tasks × Models × Prompts → LLMTask 列表</text>
+  <!-- formula box -->
+  <rect x="82" y="506" width="400" height="16" rx="4" fill="#fdecea"/>
+  <text x="92" y="518" font-size="10" fill="#c0392b" font-family="monospace">LLMTask = {taskID, model, promptID, renderedPrompt, pairIDs}</text>
+  <text x="500" y="518" font-size="10" fill="#888">支援 checkpoint 續跑</text>
+
+  <!-- Arrow 3→4 -->
+  <line x1="450" y1="529" x2="450" y2="552" stroke="#aaa" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 4: PromptFormatter -->
+  <!-- ══════════════════════════════════════════ -->
+  <rect x="60" y="554" width="780" height="60" rx="10" fill="#fff" stroke="#c8d6e5" stroke-width="1.5"/>
+  <rect x="60" y="554" width="6" height="60" rx="3" fill="#8e44ad"/>
+  <text x="82" y="575" font-size="11" font-weight="bold" fill="#8e44ad">STEP 4 — PromptFormatter (llm_modules/PromptFormatter.py)</text>
+  <text x="82" y="593" font-size="11" fill="#555">填入 {title} / {abstract} / {pairs} 佔位符，產生最終送給 LLM 的文字</text>
+
+  <!-- Arrow 4→5 -->
+  <line x1="450" y1="614" x2="450" y2="637" stroke="#aaa" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 5: OllamaEngine -->
+  <!-- ══════════════════════════════════════════ -->
+  <rect x="60" y="639" width="780" height="70" rx="10" fill="#fff" stroke="#c8d6e5" stroke-width="1.5"/>
+  <rect x="60" y="639" width="6" height="70" rx="3" fill="#2980b9"/>
+  <text x="82" y="660" font-size="11" font-weight="bold" fill="#2980b9">STEP 5 — OllamaEngine (llm_modules/OllamaEngine.py)</text>
+  <text x="82" y="678" font-size="11" fill="#555">非同步批次推論：將 Prompt 送至本地 Ollama 伺服器</text>
+  <!-- sub-boxes -->
+  <rect x="82" y="686" width="155" height="16" rx="4" fill="#d6eaf8"/>
+  <text x="92" y="698" font-size="10" fill="#1a5276">concurrency 控制</text>
+  <rect x="248" y="686" width="155" height="16" rx="4" fill="#d6eaf8"/>
+  <text x="258" y="698" font-size="10" fill="#1a5276">重試 / 錯誤處理</text>
+  <rect x="414" y="686" width="155" height="16" rx="4" fill="#d6eaf8"/>
+  <text x="424" y="698" font-size="10" fill="#1a5276">rawOutput 收集</text>
+
+  <!-- Arrow 5→6 -->
+  <line x1="450" y1="709" x2="450" y2="732" stroke="#aaa" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 6: OutputParser -->
+  <!-- ══════════════════════════════════════════ -->
+  <rect x="60" y="734" width="780" height="62" rx="10" fill="#fff" stroke="#c8d6e5" stroke-width="1.5"/>
+  <rect x="60" y="734" width="6" height="62" rx="3" fill="#16a085"/>
+  <text x="82" y="755" font-size="11" font-weight="bold" fill="#16a085">STEP 6 — OutputParser (llm_modules/OutputParser.py)</text>
+  <text x="82" y="773" font-size="11" fill="#555">Regex / 關鍵字萃取 LLM 回答 → 結構化標籤</text>
+  <rect x="82" y="781" width="340" height="10" rx="4" fill="#d0f0ea"/>
+  <text x="92" y="789" font-size="9.5" fill="#0e6655" font-family="monospace">"Yes" / "1" / "CID" → 1    │    "No" / "0" → 0</text>
+
+  <!-- Arrow 6→7 -->
+  <line x1="450" y1="796" x2="450" y2="818" stroke="#aaa" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 7: LLMResultProcessor -->
+  <!-- ══════════════════════════════════════════ -->
+  <rect x="60" y="820" width="780" height="60" rx="10" fill="#fff" stroke="#c8d6e5" stroke-width="1.5"/>
+  <rect x="60" y="820" width="6" height="60" rx="3" fill="#d35400"/>
+  <text x="82" y="841" font-size="11" font-weight="bold" fill="#d35400">STEP 7 — LLMResultProcessor (llm_modules/LLMResultProcessor.py)</text>
+  <text x="82" y="859" font-size="11" fill="#555">標籤正規化、結果合併 → partialInfo.csv / fullInfo.csv / result.csv</text>
+
+  <!-- Arrow 7→8 -->
+  <line x1="450" y1="880" x2="450" y2="903" stroke="#aaa" stroke-width="2" marker-end="url(#arr)"/>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- STEP 8: Evaluate -->
+  <!-- ══════════════════════════════════════════ -->
+  <rect x="60" y="905" width="780" height="100" rx="10" fill="#fff" stroke="#c8d6e5" stroke-width="1.5"/>
+  <rect x="60" y="905" width="6" height="100" rx="3" fill="#c0392b"/>
+  <text x="82" y="925" font-size="11" font-weight="bold" fill="#c0392b">STEP 8 — Evaluate (llm_modules/Evaluate.py)</text>
+  <text x="82" y="943" font-size="11" fill="#555">每個 Model × Prompt 組合計算分類指標，輸出報告與視覺化圖表</text>
+  <!-- output chips -->
+  <rect x="82" y="953" width="120" height="18" rx="9" fill="#fadbd8"/>
+  <text x="142" y="966" text-anchor="middle" font-size="10" fill="#922b21">eval_summary.csv</text>
+  <rect x="212" y="953" width="150" height="18" rx="9" fill="#fadbd8"/>
+  <text x="287" y="966" text-anchor="middle" font-size="10" fill="#922b21">correctness_heatmap.png</text>
+  <rect x="372" y="953" width="130" height="18" rx="9" fill="#fadbd8"/>
+  <text x="437" y="966" text-anchor="middle" font-size="10" fill="#922b21">Confusion Matrix 圖</text>
+  <rect x="512" y="953" width="150" height="18" rx="9" fill="#fadbd8"/>
+  <text x="587" y="966" text-anchor="middle" font-size="10" fill="#922b21">samples_to_review.csv</text>
+  <text x="82" y="997" font-size="10" fill="#888">Accuracy / Precision / Recall / F1 — 依 model-prompt 組合分組比較</text>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- Arrow marker definition -->
+  <!-- ══════════════════════════════════════════ -->
+  <defs>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#aaa"/>
+    </marker>
+  </defs>
+</svg>

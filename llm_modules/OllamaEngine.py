@@ -87,7 +87,7 @@ class LLMEngine:
                  concurrencyPerModel: int,
                  maxConcurrentModels: int,
                  outputFile: Union[str, Path],
-                 existingTaskIds: set = None):
+                 existingTaskIDs: set = None):
         """
         :param apiUrl: Ollama API 端點
         :param timeout: 單次請求的超時時間（秒）
@@ -95,7 +95,7 @@ class LLMEngine:
         :param concurrencyPerModel: 每個模型最大同時進行的推論請求數
         :param maxConcurrentModels: 最大同時運行的模型數（超過時後續模型需排隊等待）
         :param outputFile: 推論結果的 CSV 暫存檔路徑（斷點續傳的核心）
-        :param existingTaskIds: 已完成任務的 taskID set（由外部傳入，避免重複讀檔）
+        :param existingTaskIDs: 已完成任務的 taskID set（由外部傳入，避免重複讀檔）
         """
         self.concurrencyPerModel = concurrencyPerModel
         self.maxConcurrentModels = maxConcurrentModels
@@ -105,13 +105,13 @@ class LLMEngine:
         self.modelSemaphoreDict = defaultdict(lambda: asyncio.Semaphore(self.concurrencyPerModel))
         self.modelConcurrencySemaphore = asyncio.Semaphore(self.maxConcurrentModels)  # 跨模型的全域閘門
         # 優先使用外部傳入的 set，避免重複讀取 CSV；若未傳入則從暫存檔自行載入
-        self.existingTaskIDSet: set = existingTaskIds if existingTaskIds is not None else self._doLoadExistingTaskIDs()
+        self.existingTaskIDSet: set = existingTaskIDs if existingTaskIDs is not None else self._loadExistingTaskIDs()
         self.loggedModelSet = set()    # 記錄已印過啟動訊息的模型，避免重複 log
         self.fileLockObj = asyncio.Lock()  # 保護 CSV 的並發寫入，確保多個 coroutine 不會同時寫檔
 
-    def _doLoadExistingTaskIDs(self) -> set:
+    def _loadExistingTaskIDs(self) -> set:
         """
-        從暫存 CSV 讀取已完成的 taskID set，用於 existingTaskIds 未由外部傳入時的 fallback。
+        從暫存 CSV 讀取已完成的 taskID set，用於 existingTaskIDs 未由外部傳入時的 fallback。
 
         :return: 已完成任務的 taskID set；檔案不存在或讀取失敗時回傳空 set
         """
@@ -139,13 +139,13 @@ class LLMEngine:
             model = str(task.get('model', 'unknown_model'))
             systemPrompt = task.get('sysPrompt', '')
             userPrompt = task.get('userPrompt', '')
-            items = task.get('items', [])
+            pairs = task.get('pairs', [])
         else:
             taskID = str(getattr(task, 'taskID', 'unknown_taskID'))
             model = str(getattr(task, 'model', 'unknown_model'))
             systemPrompt = getattr(task, 'sysPrompt', '')
             userPrompt = getattr(task, 'userPrompt', '')
-            items = getattr(task, 'items', [])
+            pairs = getattr(task, 'pairs', [])
 
         if taskID in self.existingTaskIDSet:
             # 若 taskID 已存在於已完成集合中，直接返回原始任務資料，不重送 API 請求
@@ -171,7 +171,7 @@ class LLMEngine:
             completedTaskDict['rawOutput'] = rawOutput
             completedTaskDict['timestamp'] = time.strftime("%Y-%m-%d %H:%M:%S")
 
-            itemsJsonStr = json.dumps(items, ensure_ascii=False)  # 序列化為 JSON 字串存入 CSV
+            pairsJsonStr = json.dumps(pairs, ensure_ascii=False)  # 序列化為 JSON 字串存入 CSV
 
             rowDataDict = {
                 "timestamp": completedTaskDict['timestamp'],
@@ -181,7 +181,7 @@ class LLMEngine:
                 "systemPrompt": systemPrompt,
                 "userPrompt": userPrompt,
                 "rawOutput": rawOutput,
-                "items": itemsJsonStr
+                "pairs": pairsJsonStr
             }
 
             async with self.fileLockObj:
@@ -193,6 +193,9 @@ class LLMEngine:
                     if not b_fileExists:
                         csvWriterObj.writeheader()  # 首次建檔才寫表頭
                     csvWriterObj.writerow(rowDataDict)
+                    # 強制寫入磁碟，確保中斷時 checkpoint 不會遺失最後幾筆
+                    f.flush()
+                    os.fsync(f.fileno())
 
         return completedTaskDict
 

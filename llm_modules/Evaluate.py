@@ -207,3 +207,17 @@ class PromptCmbEval:
             self.hardSamplesDf.to_csv(str(self.outputDirPath / "samples_to_review.csv"), index=False, encoding='utf-8-sig')
 
         logging.info(f"✅ All results saved to: {self.outputDirPath}")
+
+    def run(self) -> Path:
+        """
+        評估階段的統一入口：依序執行指標計算、理論上限分析、圖表輸出與結果存檔。
+        外部只需呼叫這個方法，不需關心內部五個步驟的順序。
+
+        :return: 評估結果的輸出目錄（供下游引用）
+        """
+        self.doEval()
+        self.doAnalyzeUpperBound()
+        self.doPlotConfusionMatrices()
+        self.doPlotHeatmap()
+        self.doSaveResults()
+        return self.outputDirPath

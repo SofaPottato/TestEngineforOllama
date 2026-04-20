@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="900" height="620" viewBox="0 0 900 620" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', Arial, sans-serif">
+
+  <!-- Background -->
+  <rect width="900" height="620" fill="#f8f9fa" rx="12"/>
+
+  <!-- Title -->
+  <text x="450" y="38" text-anchor="middle" font-size="20" font-weight="bold" fill="#1a1a2e">LLM Prompt 組成結構</text>
+  <line x1="80" y1="48" x2="820" y2="48" stroke="#ccc" stroke-width="1.5"/>
+
+  <!-- ===== TOP: LLM Input Box ===== -->
+  <rect x="320" y="62" width="260" height="50" rx="10" fill="#1a1a2e"/>
+  <text x="450" y="83" text-anchor="middle" font-size="14" font-weight="bold" fill="white">LLM 輸入</text>
+  <text x="450" y="100" text-anchor="middle" font-size="11" fill="#aab" font-style="italic">Ollama /api/chat</text>
+
+  <!-- ===== Branches from LLM Input ===== -->
+  <!-- Left branch → System Prompt (center x=255) -->
+  <line x1="390" y1="112" x2="390" y2="130" stroke="#555" stroke-width="1.5"/>
+  <line x1="390" y1="130" x2="255" y2="130" stroke="#555" stroke-width="1.5"/>
+  <line x1="255" y1="130" x2="255" y2="148" stroke="#555" stroke-width="1.5"/>
+  <polygon points="251,148 259,148 255,156" fill="#555"/>
+
+  <!-- Right branch → User Prompt (center x=645) -->
+  <line x1="510" y1="112" x2="510" y2="130" stroke="#555" stroke-width="1.5"/>
+  <line x1="510" y1="130" x2="645" y2="130" stroke="#555" stroke-width="1.5"/>
+  <line x1="645" y1="130" x2="645" y2="148" stroke="#555" stroke-width="1.5"/>
+  <polygon points="641,148 649,148 645,156" fill="#555"/>
+
+  <!-- ===== LEFT: System Prompt ===== -->
+  <rect x="140" y="158" width="230" height="55" rx="8" fill="#2d6a4f" stroke="#1b4332" stroke-width="1.5"/>
+  <text x="255" y="179" text-anchor="middle" font-size="13" font-weight="bold" fill="white">System Prompt</text>
+  <text x="255" y="196" text-anchor="middle" font-size="10.5" fill="#b7e4c7">( role="system" )</text>
+  <text x="255" y="210" text-anchor="middle" font-size="10" fill="#95d5b2" font-style="italic">configs/prompts.yaml</text>
+
+  <!-- Arrow down -->
+  <line x1="255" y1="213" x2="255" y2="240" stroke="#555" stroke-width="1.5"/>
+  <polygon points="251,240 259,240 255,248" fill="#555"/>
+
+  <!-- Prompt combinations box -->
+  <rect x="190" y="250" width="130" height="160" rx="8" fill="#fff" stroke="#2d6a4f" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="255" y="270" text-anchor="middle" font-size="11" font-weight="bold" fill="#1b4332">Prompt 組合</text>
+  <rect x="198" y="276" width="114" height="18" rx="3" fill="#d8f3dc"/>
+  <text x="255" y="289" text-anchor="middle" font-size="10" fill="#1b4332" font-weight="bold">promptID</text>
+  <text x="255" y="308" text-anchor="middle" font-size="10" fill="#333">EMO01~03</text>
+  <text x="255" y="324" text-anchor="middle" font-size="10" fill="#333">Role01~03</text>
+  <text x="255" y="340" text-anchor="middle" font-size="10" fill="#333">S2A01~03</text>
+  <text x="255" y="356" text-anchor="middle" font-size="10" fill="#333">RAR01~03</text>
+  <text x="255" y="372" text-anchor="middle" font-size="10" fill="#333">RE201~03</text>
+  <text x="255" y="388" text-anchor="middle" font-size="10" fill="#333">Self_ASK…</text>
+
+  <!-- ===== RIGHT: User Prompt ===== -->
+  <rect x="530" y="158" width="230" height="55" rx="8" fill="#1d3557" stroke="#0d1b2a" stroke-width="1.5"/>
+  <text x="645" y="179" text-anchor="middle" font-size="13" font-weight="bold" fill="white">User Prompt</text>
+  <text x="645" y="196" text-anchor="middle" font-size="10.5" fill="#a8dadc">( role="user" )</text>
+  <text x="645" y="210" text-anchor="middle" font-size="10" fill="#90b8d6" font-style="italic">PromptFormatter.format()</text>
+
+  <!-- Arrow down -->
+  <line x1="645" y1="213" x2="645" y2="240" stroke="#555" stroke-width="1.5"/>
+  <polygon points="641,240 649,240 645,248" fill="#555"/>
+
+  <!-- User Prompt expanded box -->
+  <rect x="520" y="250" width="270" height="340" rx="8" fill="#fff" stroke="#1d3557" stroke-width="1.5" stroke-dasharray="5,3"/>
+  <text x="655" y="270" text-anchor="middle" font-size="11" font-weight="bold" fill="#1d3557">taskTemplate 填入結果</text>
+
+  <!-- Section 1: Context -->
+  <rect x="532" y="280" width="246" height="70" rx="5" fill="#e8f4fd" stroke="#aec6cf" stroke-width="1"/>
+  <text x="655" y="296" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1d3557"> Context  (Title 與 Abstract)</text>
+  <text x="542" y="314" font-size="10" fill="#333">欄位：</text>
+  <rect x="572" y="302" width="60" height="16" rx="3" fill="#cfe2f3"/>
+  <text x="602" y="314" text-anchor="middle" font-size="10" fill="#1d3557">title</text>
+  <rect x="642" y="302" width="70" height="16" rx="3" fill="#cfe2f3"/>
+  <text x="677" y="314" text-anchor="middle" font-size="10" fill="#1d3557">abstract</text>
+  <text x="542" y="333" font-size="9.5" fill="#555">→ 論文標題 + 摘要文字</text>
+  <text x="542" y="346" font-size="9" fill="#777" font-style="italic">contextColumns: ["title","abstract"]</text>
+
+  <!-- Section 2: Task Instruction -->
+  <rect x="532" y="360" width="246" height="55" rx="5" fill="#fff3cd" stroke="#ffc107" stroke-width="1"/>
+  <text x="655" y="376" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#856404"> Task Instruction  (固定文字)</text>
+  <text x="542" y="394" font-size="9.5" fill="#555">"Determine if the Chemical induces</text>
+  <text x="542" y="407" font-size="9.5" fill="#555"> the Disease … based strictly on the text."</text>
+
+  <!-- Section 3: Pairs -->
+  <rect x="532" y="425" width="246" height="95" rx="5" fill="#fce4ec" stroke="#f48fb1" stroke-width="1"/>
+  <text x="655" y="441" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#880e4f"> Pairs  (批次填入)</text>
+  <text x="542" y="459" font-size="9.5" fill="#555">pairTemplate 格式：</text>
+  <rect x="540" y="463" width="230" height="16" rx="3" fill="#fce4ec" stroke="#f48fb1" stroke-width="0.8"/>
+  <text x="655" y="475" text-anchor="middle" font-size="9.5" fill="#880e4f" font-family="monospace">{i}: Chemical: {e1} | Disease: {e2}</text>
+  <text x="542" y="493" font-size="9" fill="#777" font-style="italic">pairColumns: ["e1","e2"]</text>
+  <text x="542" y="507" font-size="9" fill="#777" font-style="italic">pairNumber: 10  (設定每批最多10筆)</text>
+
+  <!-- Section 4: Output Rules -->
+  <rect x="532" y="530" width="246" height="48" rx="5" fill="#e8f5e9" stroke="#a5d6a7" stroke-width="1"/>
+  <text x="655" y="546" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#1b5e20"> Output Rules  (固定指令)</text>
+  <text x="542" y="564" font-size="9.5" fill="#555">"Output ONLY a numbered list.</text>
+  <text x="542" y="574" font-size="9.5" fill="#555"> Format: '1: Yes' or '1: No'"</text>
+
+</svg>

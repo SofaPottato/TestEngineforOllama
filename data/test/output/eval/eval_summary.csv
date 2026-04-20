@@ -1,3 +1,3 @@
-﻿Model_Prompt_ID,Accuracy,Precision,Recall,F1_Score,MCC,Valid_Count
+﻿modelPromptID,Accuracy,Precision,Recall,f1Score,MCC,validCount
 llama3.2:1b_EMO01 + RAR02,0.67,0.0,0.0,0.0,-0.12,30
 llama3.2:1b_S2A01 + RE201,0.7,0.0,0.0,0.0,0.0,30

@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="920" height="1010" viewBox="0 0 920 1010" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI', Arial, sans-serif">
+
+  <!-- Background -->
+  <rect width="920" height="1010" fill="#f8f9fa" rx="12"/>
+
+  <!-- Title -->
+  <text x="460" y="36" text-anchor="middle" font-size="19" font-weight="bold" fill="#1a1a2e">Task 生成邏輯 — doBuildLLMTasks</text>
+  <line x1="60" y1="46" x2="860" y2="46" stroke="#ccc" stroke-width="1.5"/>
+
+  <!-- ══════════════════════════════════════════════════════
+       LEFT PANEL: pairs 切片
+  ══════════════════════════════════════════════════════ -->
+  <rect x="20" y="58" width="400" height="288" rx="9" fill="#fff" stroke="#aaa" stroke-width="1.2"/>
+  <text x="220" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#333"> pairs 分配  _buildTaskBatches()</text>
+
+  <rect x="55" y="88" width="320" height="52" rx="6" fill="#e3f2fd" stroke="#90caf9" stroke-width="1.2"/>
+  <text x="210" y="107" text-anchor="middle" font-size="10.5" font-weight="bold" fill="#0d47a1">tasks.csv  一列</text>
+  <text x="70" y="124" font-size="9.5" fill="#333">taskID(PMID): 8701013    pairs: [p1, p2, … p25]  (25 筆)</text>
+
+  <line x1="210" y1="140" x2="210" y2="162" stroke="#555" stroke-width="1.5"/>
+  <polygon points="206,162 214,162 210,170" fill="#555"/>
+  <rect x="228" y="145" width="120" height="16" rx="4" fill="#ffe082"/>
+  <text x="288" y="157" text-anchor="middle" font-size="9.5" fill="#5d4037">pairNumber = 10</text>
+
+  <rect x="45" y="174" width="330" height="22" rx="4" fill="#fce4ec" stroke="#f48fb1" stroke-width="1"/>
+  <text x="90" y="189" font-size="9.5" fill="#880e4f" font-weight="bold">taskID = 8701013_0</text>
+  <text x="250" y="189" font-size="9.5" fill="#555">pairs[0 : 10]  →  userPrompt A</text>
+
+  <rect x="45" y="200" width="330" height="22" rx="4" fill="#fce4ec" stroke="#f48fb1" stroke-width="1"/>
+  <text x="90" y="215" font-size="9.5" fill="#880e4f" font-weight="bold">taskID = 8701013_10</text>
+  <text x="250" y="215" font-size="9.5" fill="#555">pairs[10:20]  →  userPrompt B</text>
+
+  <rect x="45" y="226" width="330" height="22" rx="4" fill="#fce4ec" stroke="#f48fb1" stroke-width="1"/>
+  <text x="90" y="241" font-size="9.5" fill="#880e4f" font-weight="bold">taskID = 8701013_20</text>
+  <text x="250" y="241" font-size="9.5" fill="#555">pairs[20:25]  →  userPrompt C</text>
+
+  <rect x="45" y="256" width="330" height="22" rx="4" fill="#f5f5f5" stroke="#ccc" stroke-width="0.8"/>
+  <text x="210" y="271" text-anchor="middle" font-size="9" fill="#777" font-style="italic">若 pairs ≤ pairNumber → taskID 不加 _offset 後綴</text>
+
+  <text x="220" y="307" text-anchor="middle" font-size="10" fill="#444">每列最多產生  ⌈N ÷ pairNumber⌉  個批次</text>
+  <text x="220" y="325" text-anchor="middle" font-size="9.5" fill="#888" font-style="italic">此例：⌈25 ÷ 10⌉ = 3 個批次</text>
+
+  <!-- ══════════════════════════════════════════════════════
+       RIGHT PANEL: cross-product
+  ══════════════════════════════════════════════════════ -->
+  <rect x="440" y="58" width="460" height="288" rx="9" fill="#fff" stroke="#aaa" stroke-width="1.2"/>
+  <text x="670" y="78" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">三層巢狀迴圈</text>
+
+  <rect x="465" y="90" width="170" height="40" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-width="1.2"/>
+  <text x="550" y="107" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">selectedModels</text>
+  <text x="550" y="122" text-anchor="middle" font-size="9.5" fill="#388e3c">[ "llama3.2:1b", … ]</text>
+
+  <text x="650" y="116" text-anchor="middle" font-size="20" fill="#999" font-weight="bold">×</text>
+
+  <rect x="665" y="90" width="210" height="40" rx="6" fill="#e3f2fd" stroke="#42a5f5" stroke-width="1.2"/>
+  <text x="770" y="107" text-anchor="middle" font-size="10" font-weight="bold" fill="#0d47a1">promptCmbList</text>
+  <text x="770" y="122" text-anchor="middle" font-size="9.5" fill="#1565c0">[ EMO01, S2A01, RAR02, … ]</text>
+
+  <text x="670" y="152" text-anchor="middle" font-size="20" fill="#999" font-weight="bold">×</text>
+  <line x1="550" y1="130" x2="550" y2="144" stroke="#bbb" stroke-width="1"/>
+  <line x1="550" y1="144" x2="660" y2="144" stroke="#bbb" stroke-width="1"/>
+  <line x1="770" y1="130" x2="770" y2="144" stroke="#bbb" stroke-width="1"/>
+  <line x1="770" y1="144" x2="680" y2="144" stroke="#bbb" stroke-width="1"/>
+
+  <rect x="560" y="158" width="210" height="40" rx="6" fill="#fce4ec" stroke="#f48fb1" stroke-width="1.2"/>
+  <text x="665" y="175" text-anchor="middle" font-size="10" font-weight="bold" fill="#880e4f">taskBatches</text>
+  <text x="665" y="190" text-anchor="middle" font-size="9.5" fill="#ad1457">[ (8701013_0, …), (8701013_10, …), … ]</text>
+
+
+
+  <rect x="490" y="228" width="340" height="28" rx="5" fill="#fff8e1" stroke="#ffc107" stroke-width="1.2"/>
+  <text x="660" y="247" text-anchor="middle" font-size="11" fill="#e65100">總任務數  =  #models  ×  #prompts  ×  #taskBatches</text>
+
+  <line x1="665" y1="256" x2="665" y2="272" stroke="#555" stroke-width="1.5"/>
+  <polygon points="661,272 669,272 665,280" fill="#555"/>
+
+  <!-- LLMTask box (inside right panel, bottom) -->
+  <rect x="460" y="280" width="410" height="52" rx="6" fill="#1d3557" stroke="#0d1b2a" stroke-width="1.5"/>
+  <text x="665" y="298" text-anchor="middle" font-size="11" font-weight="bold" fill="white">LLMTask</text>
+  <text x="475" y="316" font-size="9" fill="#a8dadc">model  │  promptID  │  sysPrompt  │  userPrompt  │  pairs  │  taskID</text>
+
+  <!-- Arrow from LLMTask down to sources panel -->
+  <line x1="665" y1="332" x2="665" y2="354" stroke="#555" stroke-width="1.5"/>
+  <polygon points="661,354 669,354 665,362" fill="#555"/>
+
+  <!-- ══════════════════════════════════════════════════════
+       MIDDLE PANEL: LLMTask 欄位來源
+  ══════════════════════════════════════════════════════ -->
+  <rect x="20" y="364" width="880" height="218" rx="9" fill="#fff" stroke="#aaa" stroke-width="1.2"/>
+  <text x="460" y="382" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">LLMTask  各欄位來源</text>
+
+  <!-- Column headers -->
+  <rect x="30" y="388" width="880" height="18" rx="3" fill="#eceff1"/>
+  <text x="100"  y="401" text-anchor="middle" font-size="9.5" fill="#555" font-weight="bold">欄位</text>
+  <text x="340"  y="401" text-anchor="middle" font-size="9.5" fill="#555" font-weight="bold">來源檔案 / 邏輯</text>
+  <text x="730"  y="401" text-anchor="middle" font-size="9.5" fill="#555" font-weight="bold">實際值（範例）</text>
+  <line x1="175" y1="388" x2="175" y2="582" stroke="#e0e0e0" stroke-width="1"/>
+  <line x1="510" y1="388" x2="510" y2="582" stroke="#e0e0e0" stroke-width="1"/>
+
+  <!-- Row 1: model -->
+  <rect x="30"  y="408" width="143" height="26" rx="4" fill="#e8f5e9" stroke="#a5d6a7" stroke-width="0.8"/>
+  <text x="100"  y="425" text-anchor="middle" font-size="10" fill="#1b5e20" font-weight="bold">model</text>
+  <text x="340"  y="425" text-anchor="middle" font-size="9.5" fill="#333">llm_config.yaml  →  selectedModels</text>
+  <text x="730"  y="425" text-anchor="middle" font-size="9.5" fill="#388e3c" font-family="monospace">"llama3.2:1b"</text>
+
+  <!-- Row 2: promptID -->
+  <rect x="30"  y="436" width="143" height="26" rx="4" fill="#e3f2fd" stroke="#90caf9" stroke-width="0.8"/>
+  <text x="100"  y="453" text-anchor="middle" font-size="10" fill="#0d47a1" font-weight="bold">promptID</text>
+  <text x="340"  y="453" text-anchor="middle" font-size="9.5" fill="#333">prompts.yaml → promptCmbPath CSV  ( promptID 欄 )</text>
+  <text x="730"  y="453" text-anchor="middle" font-size="9.5" fill="#1565c0" font-family="monospace">"EMO01"</text>
+
+  <!-- Row 3: sysPrompt -->
+  <rect x="30"  y="464" width="143" height="26" rx="4" fill="#e3f2fd" stroke="#90caf9" stroke-width="0.8"/>
+  <text x="100"  y="481" text-anchor="middle" font-size="10" fill="#0d47a1" font-weight="bold">sysPrompt</text>
+  <text x="340"  y="481" text-anchor="middle" font-size="9.5" fill="#333">prompts.yaml → promptCmbPath CSV  ( promptText 欄 )</text>
+  <text x="730"  y="481" text-anchor="middle" font-size="9.5" fill="#1565c0" font-family="monospace">"This is very important to my career"</text>
+
+  <!-- Row 4: userPrompt -->
+  <rect x="30"  y="492" width="143" height="26" rx="4" fill="#f3e5f5" stroke="#ce93d8" stroke-width="0.8"/>
+  <text x="100"  y="509" text-anchor="middle" font-size="10" fill="#4a148c" font-weight="bold">userPrompt</text>
+  <text x="340"  y="509" text-anchor="middle" font-size="9.5" fill="#333">PromptFormatter：taskTemplate ＋ title/abstract ＋ pairs</text>
+  <text x="730"  y="509" text-anchor="middle" font-size="9.5" fill="#6a1b9a" font-family="monospace">"Title: … Abstract: … Pairs: …"</text>
+
+  <!-- Row 5: pairs -->
+  <rect x="30"  y="520" width="143" height="26" rx="4" fill="#fce4ec" stroke="#f48fb1" stroke-width="0.8"/>
+  <text x="100"  y="537" text-anchor="middle" font-size="10" fill="#880e4f" font-weight="bold">pairs</text>
+  <text x="340"  y="537" text-anchor="middle" font-size="9.5" fill="#333">tasks.csv  pairs JSON  [ offset : offset + pairNumber ]</text>
+  <text x="730"  y="537" text-anchor="middle" font-size="9.5" fill="#880e4f" font-family="monospace">[ {e1:"famotidine", e2:"delirium"}, … ]</text>
+
+  <!-- Row 6: taskID -->
+  <rect x="30"  y="548" width="143" height="26" rx="4" fill="#eceff1" stroke="#b0bec5" stroke-width="0.8"/>
+  <text x="100"  y="565" text-anchor="middle" font-size="10" fill="#263238" font-weight="bold">taskID</text>
+  <text x="340"  y="565" text-anchor="middle" font-size="9.5" fill="#333">構成：{model} :: {promptID} :: {PMID}(_offset)</text>
+  <text x="730"  y="565" text-anchor="middle" font-size="9.5" fill="#37474f" font-family="monospace">"llama3.2:1b::EMO01::8701013_0"</text>
+
+  <!-- ══════════════════════════════════════════════════════
+       CALLOUT: taskID 三階段變化
+  ══════════════════════════════════════════════════════ -->
+  <!-- callout bubble shape: rect + triangle pointer at top-left -->
+  <rect x="20" y="600" width="880" height="138" rx="9" fill="#fffde7" stroke="#f9a825" stroke-width="1.8"/>
+  <!-- triangle pointer pointing up toward LLMTask field sources panel -->
+  <polygon points="100,591 116,600 84,600" fill="#fffde7" stroke="#f9a825" stroke-width="1.5" stroke-linejoin="round"/>
+  <!-- cover the border segment under triangle -->
+  <line x1="85" y1="600" x2="115" y2="600" stroke="#fffde7" stroke-width="2.2"/>
+
+  <text x="460" y="618" text-anchor="middle" font-size="11.5" font-weight="bold" fill="#e65100">taskID  的三階段變化</text>
+  <line x1="40" y1="624" x2="880" y2="624" stroke="#ffe082" stroke-width="1"/>
+
+  <!-- Stage 1 -->
+  <rect x="38" y="632" width="220" height="52" rx="7" fill="#e3f2fd" stroke="#90caf9" stroke-width="1.2"/>
+  <text x="148" y="649" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#0d47a1">① tasks.csv  原始值</text>
+  <text x="148" y="665" text-anchor="middle" font-size="10" fill="#1565c0" font-family="monospace">taskID = 8701013</text>
+  <text x="148" y="679" text-anchor="middle" font-size="8.5" fill="#777" font-style="italic">PMID（論文唯一編號）</text>
+
+  <!-- arrow 1→2 -->
+  <line x1="258" y1="658" x2="292" y2="658" stroke="#888" stroke-width="1.5"/>
+  <polygon points="292,654 292,662 300,658" fill="#888"/>
+  <text x="279" y="650" text-anchor="middle" font-size="8" fill="#888">_buildTaskBatches</text>
+  <text x="279" y="672" text-anchor="middle" font-size="8" fill="#e65100">+ offset</text>
+
+  <!-- Stage 2 -->
+  <rect x="302" y="632" width="230" height="52" rx="7" fill="#fce4ec" stroke="#f48fb1" stroke-width="1.2"/>
+  <text x="417" y="649" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#880e4f">② taskBatch  批次 ID</text>
+  <text x="417" y="665" text-anchor="middle" font-size="10" fill="#880e4f" font-family="monospace">8701013_0  /  _10  /  _20</text>
+  <text x="417" y="679" text-anchor="middle" font-size="8.5" fill="#777" font-style="italic">PMID + pairs 起始 offset</text>
+
+  <!-- arrow 2→3 -->
+  <line x1="532" y1="658" x2="566" y2="658" stroke="#888" stroke-width="1.5"/>
+  <polygon points="566,654 566,662 574,658" fill="#888"/>
+  <text x="553" y="650" text-anchor="middle" font-size="8" fill="#888">doBuildLLMTasks</text>
+  <text x="553" y="672" text-anchor="middle" font-size="8" fill="#e65100">+ model + promptID</text>
+
+  <!-- Stage 3 -->
+  <rect x="576" y="632" width="322" height="52" rx="7" fill="#eceff1" stroke="#90a4ae" stroke-width="1.2"/>
+  <text x="737" y="649" text-anchor="middle" font-size="9.5" font-weight="bold" fill="#263238">③ LLMTask.taskID  =  fullTaskID</text>
+  <text x="737" y="665" text-anchor="middle" font-size="9.5" fill="#37474f" font-family="monospace">"llama3.2:1b::EMO01::8701013_0"</text>
+  <text x="737" y="679" text-anchor="middle" font-size="8.5" fill="#777" font-style="italic">model :: promptID :: PMID_offset（checkpoint key）</text>
+
+  <!-- ══════════════════════════════════════════════════════
+       BOTTOM PANEL: fullTaskID + checkpoint
+  ══════════════════════════════════════════════════════ -->
+  <rect x="20" y="752" width="880" height="245" rx="9" fill="#fff" stroke="#aaa" stroke-width="1.2"/>
+  <text x="460" y="772" text-anchor="middle" font-size="12" font-weight="bold" fill="#333">fullTaskID 組成  &amp;  斷點續傳</text>
+
+  <!-- fullTaskID label -->
+  <text x="40" y="794" font-size="11" fill="#555">fullTaskID  =</text>
+
+  <rect x="138" y="780" width="155" height="28" rx="5" fill="#2d6a4f"/>
+  <text x="215" y="799" text-anchor="middle" font-size="11" font-weight="bold" fill="white">model</text>
+
+  <text x="300" y="799" text-anchor="middle" font-size="16" fill="#aaa">::</text>
+
+  <rect x="318" y="780" width="155" height="28" rx="5" fill="#1d3557"/>
+  <text x="395" y="799" text-anchor="middle" font-size="11" font-weight="bold" fill="white">promptID</text>
+
+  <text x="480" y="799" text-anchor="middle" font-size="16" fill="#aaa">::</text>
+
+  <rect x="498" y="780" width="240" height="28" rx="5" fill="#880e4f"/>
+  <text x="618" y="799" text-anchor="middle" font-size="11" font-weight="bold" fill="white">taskID  (_offset)</text>
+
+  <!-- example row -->
+  <text x="40" y="828" font-size="10" fill="#888" font-style="italic">例：</text>
+  <rect x="73" y="814" width="155" height="24" rx="4" fill="#d8f3dc" stroke="#2d6a4f" stroke-width="0.8"/>
+  <text x="150" y="830" text-anchor="middle" font-size="10" fill="#1b4332">llama3.2:1b</text>
+
+  <text x="235" y="828" text-anchor="middle" font-size="13" fill="#aaa">::</text>
+
+  <rect x="252" y="814" width="155" height="24" rx="4" fill="#dbeafe" stroke="#1d3557" stroke-width="0.8"/>
+  <text x="329" y="830" text-anchor="middle" font-size="10" fill="#0d47a1">EMO01</text>
+
+  <text x="414" y="828" text-anchor="middle" font-size="13" fill="#aaa">::</text>
+
+  <rect x="430" y="814" width="240" height="24" rx="4" fill="#fce4ec" stroke="#880e4f" stroke-width="0.8"/>
+  <text x="550" y="830" text-anchor="middle" font-size="10" fill="#880e4f">8701013_0</text>
+
+  <!-- divider -->
+  <line x1="40" y1="850" x2="880" y2="850" stroke="#eee" stroke-width="1.2"/>
+
+  <!-- checkpoint flow -->
+  <text x="40" y="870" font-size="10.5" font-weight="bold" fill="#444">斷點續傳流程：</text>
+
+  <rect x="40" y="880" width="150" height="40" rx="6" fill="#f3e5f5" stroke="#ab47bc" stroke-width="1.2"/>
+  <text x="115" y="897" text-anchor="middle" font-size="10" font-weight="bold" fill="#6a1b9a">raw.csv</text>
+  <text x="115" y="911" text-anchor="middle" font-size="9" fill="#7b1fa2">已完成任務紀錄</text>
+
+  <line x1="190" y1="900" x2="215" y2="900" stroke="#555" stroke-width="1.3"/>
+  <polygon points="215,896 215,904 223,900" fill="#555"/>
+  <text x="196" y="894" font-size="8.5" fill="#888">讀取</text>
+
+  <rect x="223" y="880" width="190" height="40" rx="6" fill="#fff3cd" stroke="#ffc107" stroke-width="1.2"/>
+  <text x="318" y="897" text-anchor="middle" font-size="10" font-weight="bold" fill="#856404">fullTaskID 是否存在？</text>
+  <text x="318" y="911" text-anchor="middle" font-size="9" fill="#795548">completedIDSet.contains(id)</text>
+
+  <line x1="318" y1="920" x2="318" y2="945" stroke="#555" stroke-width="1.3"/>
+  <polygon points="314,945 322,945 318,953" fill="#555"/>
+  <text x="290" y="938" font-size="9" fill="#d32f2f">Yes</text>
+  <rect x="253" y="955" width="130" height="28" rx="5" fill="#ffebee" stroke="#ef9a9a" stroke-width="1"/>
+  <text x="318" y="973" text-anchor="middle" font-size="10" fill="#c62828">skip（斷點續傳）</text>
+
+  <line x1="413" y1="900" x2="438" y2="900" stroke="#555" stroke-width="1.3"/>
+  <polygon points="438,896 438,904 446,900" fill="#555"/>
+  <text x="420" y="893" font-size="9" fill="#2e7d32">No</text>
+
+  <rect x="446" y="880" width="130" height="40" rx="6" fill="#e8f5e9" stroke="#66bb6a" stroke-width="1.2"/>
+  <text x="511" y="897" text-anchor="middle" font-size="10" font-weight="bold" fill="#1b5e20">執行推論</text>
+  <text x="511" y="911" text-anchor="middle" font-size="9" fill="#2e7d32">LLMEngine.run()</text>
+
+  <line x1="576" y1="900" x2="601" y2="900" stroke="#555" stroke-width="1.3"/>
+  <polygon points="601,896 601,904 609,900" fill="#555"/>
+
+  <rect x="609" y="880" width="180" height="40" rx="6" fill="#f3e5f5" stroke="#ab47bc" stroke-width="1.2"/>
+  <text x="699" y="897" text-anchor="middle" font-size="10" font-weight="bold" fill="#6a1b9a">append → raw.csv</text>
+  <text x="699" y="911" text-anchor="middle" font-size="9" fill="#7b1fa2">fullTaskID + 推論結果</text>
+
+</svg>

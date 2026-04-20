@@ -1,14 +1,13 @@
 import asyncio
-import json
 import logging
-from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Set, Iterator, Tuple
 import pandas as pd
 from .OllamaEngine import LLMEngine
 from .OutputParser import OutputParser
 from .LLMResultProcessor import LLMResultProcessor
 from .Evaluate import PromptCmbEval
-from .PromptRenderer import PromptRenderer
+from .PromptFormatter import PromptFormatter
+from .utils import parseJsonField
 from .schemas import DataLoadError, TaskBuildError, InferenceError, LLMAppConfig, LLMTask
 
 
@@ -23,22 +22,9 @@ class ExperimentPipeline:
         """
         logging.info("Initializing ExperimentPipeline()")
         self.config = config
-        p = config.paths
-
-        self.taskCsvPath = p.taskCsvPath
-        self.promptCmbPath = p.promptCmbPath
-        self.rawOutputPath = p.rawOutputPath
-        self.resultPath = p.resultPath
-        self.singlePromptOutputDir = p.singlePromptOutputDir
-        self.partialInfoPath = p.partialInfoPath
-        self.fullInfoPath = p.fullInfoPath
-        self.evalDir = p.evalDir
-
-        self.rawOutputPath.parent.mkdir(parents=True, exist_ok=True)
-        self.fullInfoPath.parent.mkdir(parents=True, exist_ok=True)
-
-        self.renderer = PromptRenderer(config.taskTemplate, config.itemTemplate)
-
+        self.paths = config.paths
+        self.formatter = PromptFormatter(config.taskTemplate, config.pairTemplate,
+                                         config.pairColumns or None)
         logging.info("ExperimentPipeline initialized.")
 
     # ===================== 資料載入 =====================
@@ -46,35 +32,35 @@ class ExperimentPipeline:
     def doLoadTaskCsv(self) -> pd.DataFrame:
         """
         載入前處理產出的標準 Task CSV。
-        必要欄位：taskID, context (JSON), items (JSON)
+        必要欄位：taskID, pairs (JSON)，以及 contextColumns 宣告的所有欄位（預設 title, abstract）
 
-        :return: Task DataFrame
         :raises DataLoadError: 找不到檔案或缺少必要欄位時
         """
-        if not self.taskCsvPath.exists():
-            raise DataLoadError(f"找不到 Task CSV: {self.taskCsvPath}")
+        path = self.paths.taskCsvPath
+        if not path.exists():
+            raise DataLoadError(f"找不到 Task CSV: {path}")
 
-        taskDf = pd.read_csv(self.taskCsvPath, encoding='utf-8-sig')
-        required = {'taskID', 'context', 'items'}
-        missing = required - set(taskDf.columns)
-        if missing:
-            raise DataLoadError(f"Task CSV 缺少必要欄位: {missing}")
+        taskDf = pd.read_csv(path, encoding='utf-8-sig')
+        requiredCols = {'taskID', 'pairs'} | set(self.config.contextColumns)
+        missingColsSet = requiredCols - set(taskDf.columns)
+        if missingColsSet:
+            raise DataLoadError(f"Task CSV 缺少必要欄位: {missingColsSet}")
 
-        logging.info(f"Task CSV loaded: {len(taskDf)} tasks from {self.taskCsvPath}")
+        logging.info(f"Task CSV loaded: {len(taskDf)} tasks from {path}")
         return taskDf
 
     def doLoadPromptCmb(self) -> List[Dict[str, str]]:
         """
-        載入 Prompt 組合 CSV，回傳 List[Dict]。
-        每個 Dict 含 'promptID' 與 'promptText'。
+        載入 Prompt 組合 CSV。
 
         :return: List[{'promptID': str, 'promptText': str}]
         :raises DataLoadError: 找不到檔案或缺少必要欄位時
         """
-        if not self.promptCmbPath.exists():
-            raise DataLoadError(f"找不到 Prompt 組合檔案: {self.promptCmbPath}")
+        path = self.paths.promptCmbPath
+        if not path.exists():
+            raise DataLoadError(f"找不到 Prompt 組合檔案: {path}")
 
-        promptDf = pd.read_csv(self.promptCmbPath, encoding='utf-8-sig')
+        promptDf = pd.read_csv(path, encoding='utf-8-sig')
         if 'promptID' not in promptDf.columns or 'promptText' not in promptDf.columns:
             raise DataLoadError("Prompt CSV 缺少 'promptID' 或 'promptText' 欄位。")
 
@@ -82,102 +68,144 @@ class ExperimentPipeline:
 
     # ===================== 任務建構 =====================
 
-    def doBuildLLMTasks(self, taskDf: pd.DataFrame, promptCmbList: List[Dict],
-                        completedIDs: set) -> List[LLMTask]:
+    def _buildTaskBatches(self, taskDf: pd.DataFrame) -> List[Tuple[str, list, str]]:
+        """
+        每列預處理一次：parse JSON、依 pairNumber 切片、format userPrompt。
+        避免在 model × prompt 迴圈內重複計算。
+
+        :return: [(taskID, pairs, userPrompt), ...]
+        """
+        pairNumber = self.config.pairNumber
+        rowsList = []
+        for _, row in taskDf.iterrows():
+            taskBaseID = str(row['taskID'])
+            context = {f: row[f] for f in self.config.contextColumns}
+            allPairs = parseJsonField(row['pairs'], 'pairs', taskBaseID)
+
+            for offset in range(0, len(allPairs), pairNumber):
+                batchPairs = allPairs[offset:offset + pairNumber]
+                batchID = f"{taskBaseID}_{offset}" if len(allPairs) > pairNumber else taskBaseID
+                userPrompt = self.formatter.format(context, batchPairs)
+                rowsList.append((batchID, batchPairs, userPrompt))
+        return rowsList
+
+    def doSavePromptPreview(self, taskDf: pd.DataFrame, promptCmbList: List[Dict[str, str]]):
+        """
+        將所有 promptID × task 組合渲染後的 userPrompt 存成 CSV，供人工檢查。
+        欄位：taskID, promptID, sysPrompt, userPrompt
+        """
+        rowsList = self._buildTaskBatches(taskDf)
+        records = []
+        for prompt in promptCmbList:
+            for taskID, _, userPrompt in rowsList:
+                records.append({
+                    'taskID':     taskID,
+                    'promptID':   prompt['promptID'],
+                    'sysPrompt':  prompt['promptText'],
+                    'userPrompt': userPrompt,
+                })
+
+        path = self.paths.promptPreviewPath
+        pd.DataFrame(records).to_csv(str(path), index=False, encoding='utf-8-sig')
+        logging.info(f"Prompt preview saved: {len(records)} entries -> {path}")
+
+    def _iterPromptCombinations(
+        self, promptCmbList: List[Dict[str, str]]
+    ) -> Iterator[Tuple[str, str, str]]:
+        """Yield (model, promptID, sysPrompt) 的所有組合。"""
+        for model in self.config.selectedModels:
+            for prompt in promptCmbList:
+                yield model, prompt['promptID'], prompt['promptText']
+
+    def doBuildLLMTasks(self, taskDf: pd.DataFrame, promptCmbList: List[Dict[str, str]],
+                        completedIDSet: Set[str]) -> List[LLMTask]:
         """
         將 Task CSV × models × prompts 排列組合，產出 LLMTask list。
         已完成的 taskID 會被跳過（斷點續傳）。
 
-        :param taskDf: 前處理產出的 Task DataFrame
-        :param promptCmbList: Prompt 組合清單
-        :param completedIDs: 已完成任務的 taskID set
-        :return: 待執行的 LLMTask list
+        :raises TaskBuildError: 模型或 prompt 清單為空時
         """
-        tasksToRun: List[LLMTask] = []
-        skipped = 0
+        if not self.config.selectedModels:
+            raise TaskBuildError("config.selectedModels 為空，無可執行模型。")
+        if not promptCmbList:
+            raise TaskBuildError("Prompt 組合清單為空。")
 
-        for model in self.config.selectedModels:
-            for promptDict in promptCmbList:
-                promptID = promptDict['promptID']
-                sysPrompt = promptDict['promptText']
+        rowsList = self._buildTaskBatches(taskDf)
+        tasksToRunList: List[LLMTask] = []
+        skippedCount = 0
 
-                for _, row in taskDf.iterrows():
-                    taskBaseID = str(row['taskID'])
-                    context = json.loads(row['context']) if isinstance(row['context'], str) else row['context']
-                    items = json.loads(row['items']) if isinstance(row['items'], str) else row['items']
+        for model, promptID, sysPrompt in self._iterPromptCombinations(promptCmbList):
+            for taskBaseID, pairsList, userPrompt in rowsList:
+                fullTaskID = f"{model}::{promptID}::{taskBaseID}"
+                if fullTaskID in completedIDSet:
+                    skippedCount += 1
+                    continue
+                tasksToRunList.append(LLMTask(
+                    taskID=fullTaskID,
+                    model=model,
+                    promptID=promptID,
+                    sysPrompt=sysPrompt,
+                    userPrompt=userPrompt,
+                    pairs=pairsList,
+                ))
 
-                    fullTaskID = f"{model}::{promptID}::{taskBaseID}"
-
-                    if fullTaskID in completedIDs:
-                        skipped += 1
-                        continue
-
-                    userPrompt = self.renderer.render(context, items)
-
-                    task = LLMTask(
-                        taskID=fullTaskID,
-                        model=model,
-                        promptID=promptID,
-                        sysPrompt=sysPrompt,
-                        userPrompt=userPrompt,
-                        items=items
-                    )
-                    tasksToRun.append(task)
-
-        if skipped > 0:
-            logging.info(f"Skipped {skipped} previously completed tasks.")
-        logging.info(f"Built {len(tasksToRun)} new tasks to run.")
-        return tasksToRun
+        if skippedCount > 0:
+            logging.info(f"Skipped {skippedCount} previously completed tasks.")
+        logging.info(f"Built {len(tasksToRunList)} new tasks to run.")
+        return tasksToRunList
 
     # ===================== 斷點續傳 =====================
 
-    def doGetCompletedTasks(self) -> set:
+    def doGetCompletedTasks(self) -> Set[str]:
         """
         讀取推論暫存檔，取得所有已完成任務的 taskID，用於斷點續傳。
-
-        :return: 已完成任務的 taskID set
         """
-        completedIDs = set()
-        if not self.rawOutputPath.exists():
-            return completedIDs
+        completedIDSet: Set[str] = set()
+        path = self.paths.rawOutputPath
+        if not path.exists():
+            return completedIDSet
 
         try:
-            checkpointDf = pd.read_csv(str(self.rawOutputPath), encoding='utf-8-sig')
-            if 'taskID' in checkpointDf.columns:
-                completedIDs.update(checkpointDf['taskID'].dropna().astype(str).str.strip().tolist())
-            else:
-                logging.warning("Checkpoint file missing 'taskID' column.")
-            logging.info(f"Checkpoint loaded: {len(completedIDs)} completed tasks.")
-        except Exception as e:
+            checkpointDf = pd.read_csv(path, encoding='utf-8-sig')
+        except (pd.errors.ParserError, pd.errors.EmptyDataError, OSError, UnicodeDecodeError) as e:
             logging.warning(f"Failed to read checkpoint, starting fresh: {e}")
+            return completedIDSet
 
-        return completedIDs
+        if 'taskID' in checkpointDf.columns:
+            completedIDSet.update(checkpointDf['taskID'].dropna().astype(str).str.strip().tolist())
+        else:
+            logging.warning("Checkpoint file missing 'taskID' column.")
+        logging.info(f"Checkpoint loaded: {len(completedIDSet)} completed tasks.")
+
+        return completedIDSet
 
     # ===================== 推論 =====================
 
-    def doRunInference(self, tasksToRun: List[LLMTask], completedIDs: set):
+    def doRunInference(self, tasksToRunList: List[LLMTask], completedIDSet: Set[str]):
         """
         建立 LLMEngine 並以非同步方式執行所有推論任務。
-
-        :param tasksToRun: 尚未完成的 LLMTask 物件清單
-        :param completedIDs: 已完成任務的 taskID set
         """
-        engine = LLMEngine(
+        engineObj = LLMEngine(
             apiUrl=self.config.ollamaServer.url,
             timeout=self.config.ollamaServer.timeout,
             llmOptions=self.config.llmOptions,
             concurrencyPerModel=self.config.concurrencyPerModel,
             maxConcurrentModels=self.config.maxConcurrentModels,
-            outputFile=str(self.rawOutputPath),
-            existingTaskIds=completedIDs
+            outputFile=str(self.paths.rawOutputPath),
+            # 雖然 doBuildLLMTasks 已過濾，這裡再傳一次作為寫入端 dedup 安全網
+            existingTaskIDs=completedIDSet,
         )
 
-        logging.info(f"Dispatching {len(tasksToRun)} tasks to async engine...")
-        taskDictList = [task.model_dump() for task in tasksToRun]
-        asyncio.run(engine.doExecuteTaskBatches(taskDictList))
-        logging.info(f"Inference complete. Raw output saved to: {self.rawOutputPath}")
+        logging.info(f"Dispatching {len(tasksToRunList)} tasks to async engine...")
+        taskDictList = [task.model_dump() for task in tasksToRunList]
+        asyncio.run(engineObj.doExecuteTaskBatches(taskDictList))
+        logging.info(f"Inference complete. Raw output saved to: {self.paths.rawOutputPath}")
 
     # ===================== 主流程 =====================
+
+    @staticmethod
+    def _logStep(n: int, title: str):
+        logging.info(f"==== [Step {n}] {title} ====")
 
     def run(self):
         """
@@ -189,52 +217,45 @@ class ExperimentPipeline:
           5. 清理資料、轉置為寬格式
           6. 評估各模型/prompt 組合的分類效能
         """
-        logging.info("==== [Step 1] Loading Task CSV & Prompts ====")
+        self._logStep(1, "Loading Task CSV & Prompts")
         taskDf = self.doLoadTaskCsv()
         promptCmbList = self.doLoadPromptCmb()
+        self.doSavePromptPreview(taskDf, promptCmbList)
 
-        logging.info("==== [Step 2] Building LLM Tasks ====")
-        completedIDs = self.doGetCompletedTasks()
-        tasksToRun = self.doBuildLLMTasks(taskDf, promptCmbList, completedIDs)
-
-        if not tasksToRun and not completedIDs:
+        self._logStep(2, "Building LLM Tasks")
+        completedIDSet = self.doGetCompletedTasks()
+        tasksToRunList = self.doBuildLLMTasks(taskDf, promptCmbList, completedIDSet)
+        if not tasksToRunList and not completedIDSet:
             raise TaskBuildError("No tasks to run and no checkpoint found.")
 
-        if tasksToRun:
-            logging.info(f"==== [Step 3] Running Inference ({len(tasksToRun)} tasks) ====")
+        if tasksToRunList:
+            self._logStep(3, f"Running Inference ({len(tasksToRunList)} tasks)")
             try:
-                self.doRunInference(tasksToRun, completedIDs)
+                self.doRunInference(tasksToRunList, completedIDSet)
             except Exception as e:
                 raise InferenceError(f"Inference failed: {e}") from e
         else:
-            logging.info("==== [Step 3] All tasks completed. Skipping inference. ====")
+            self._logStep(3, "All tasks completed. Skipping inference.")
 
-        logging.info("==== [Step 4] Parsing LLM Outputs ====")
-        parser = OutputParser(
-            rawCsvPath=self.rawOutputPath,
-            csvOutputPath=self.resultPath,
-            singlePromptCmbOutputDir=self.singlePromptOutputDir
-        )
-        parsedPath = parser.doParse()
+        self._logStep(4, "Parsing LLM Outputs")
+        parsedPath = OutputParser(
+            rawCsvPath=self.paths.rawOutputPath,
+            outputCsvPath=self.paths.resultPath,
+            singlePromptCmbOutputDir=self.paths.singlePromptCmbOutputDir,
+        ).run()
 
-        logging.info("==== [Step 5] Processing Results ====")
-        processor = LLMResultProcessor(
+        self._logStep(5, "Processing Results")
+        processedPath = LLMResultProcessor(
             inputCsvPath=parsedPath,
-            outputCsvPath=self.partialInfoPath,
-            mergedPath=self.fullInfoPath,
-            labelMap=self.config.labelMap
-        )
-        processedPath = processor.doCleanAndMerge()
+            outputCsvPath=self.paths.partialInfoPath,
+            mergedPath=self.paths.fullInfoPath,
+            labelMap=self.config.labelMap,
+        ).run()
 
-        logging.info("==== [Step 6] Evaluating ====")
-        evaluator = PromptCmbEval(
+        self._logStep(6, "Evaluating")
+        PromptCmbEval(
             inputCsvPath=processedPath,
-            outputBaseDir=self.evalDir
-        )
-        evaluator.doEval()
-        evaluator.doAnalyzeUpperBound()
-        evaluator.doPlotConfusionMatrices()
-        evaluator.doPlotHeatmap()
-        evaluator.doSaveResults()
+            outputBaseDir=self.paths.evalDir,
+        ).run()
 
         logging.info("Pipeline completed successfully!")
