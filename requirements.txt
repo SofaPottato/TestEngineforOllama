@@ -1,5 +1,10 @@
 PyYAML
 numpy
-requests
 pandas
 tqdm
+httpx
+tenacity
+pydantic
+seaborn
+matplotlib
+scikit-learn

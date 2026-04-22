@@ -7,7 +7,7 @@
 paths:
   taskCsvPath:   "data/test/tasks.csv"
   promptCmbPath: "data/prompt_output/testPrompt.csv"
-  outputRoot:    "data/testv1v/output"
+  outputRoot:    "data/testv1/output"
 
   # 可選 override（未填則用預設檔名，全部放在 outputRoot 底下）
   rawOutputPath:            "raw.csv"

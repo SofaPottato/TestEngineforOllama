@@ -1,0 +1,58 @@
+# =========================================================================
+# LLM PPI (Protein-Protein Interaction) 推論設定檔
+# 資料集：LLL（單句，PROTEIN1/PROTEIN2 已嵌入句中）
+# 前處理：python preprocess/lll.py  （將 LLL-test.csv → data/LLL/tasks.csv）
+# =========================================================================
+
+# --- 路徑 ---
+paths:
+  taskCsvPath:   "data/PPI/LLL/LLL-tasks.csv"
+  promptCmbPath: "data/prompt_output/testPrompt.csv"
+  outputRoot:    "data/PPI/LLL/output"
+
+  rawOutputPath:            "raw.csv"
+  resultPath:               "result.csv"
+  singlePromptCmbOutputDir: "singleOutput"
+  partialInfoPath:          "partialInfo.csv"
+  fullInfoPath:             "fullInfo.csv"
+  evalDir:                  "eval"
+
+# --- 模型 ---
+selectedModels: ["llama3.2:1b"]
+pairNumber: 1      
+
+# --- Prompt 模板 ---
+# contextColumns：Task CSV 中對應 taskTemplate 佔位符的欄位名稱
+contextColumns: ["passage"]
+taskTemplate: |
+  Sentence: {passage}
+
+  Task: Based on the sentence, do PROTEIN1 and PROTEIN2 have a protein-protein interaction (PPI)?
+
+  IMPORTANT OUTPUT RULES:
+  1. Output ONLY: "1: Yes" or "1: No"
+  2. Do NOT provide explanations.
+  3. Do NOT use Markdown formatting.
+
+# --- 標籤映射 ---
+# LLL 的 isValid 欄位為 TRUE/FALSE
+labelMap:
+  positive: ["yes", "true"]
+  negative: ["no", "false", "none", "negative"]
+
+# --- Ollama 連線 ---
+ollamaServer:
+  url:     "http://localhost:11434/api/chat"
+  timeout: 600
+
+# --- 推論參數 ---
+llmOptions:
+  temperature:    0
+  num_predict:    60
+  num_ctx:        8192
+  num_gpu:        99
+  repeat_penalty: 1.1
+
+# --- 並發控制 ---
+concurrencyPerModel: 2
+maxConcurrentModels: 1

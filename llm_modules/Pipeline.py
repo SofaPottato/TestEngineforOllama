@@ -2,7 +2,7 @@ import asyncio
 import logging
 from typing import List, Dict, Set, Iterator, Tuple
 import pandas as pd
-from .OllamaEngine import LLMEngine
+from .OllamaEngine import LLMEngine, RAW_CSV_SCHEMA
 from .OutputParser import OutputParser
 from .LLMResultProcessor import LLMResultProcessor
 from .Evaluate import PromptCmbEval
@@ -25,6 +25,9 @@ class ExperimentPipeline:
         self.paths = config.paths
         self.formatter = PromptFormatter(config.taskTemplate, config.pairTemplate,
                                          config.pairColumns or None)
+        # _buildTaskBatches 在 preview 與 build 兩處都會用到，cache 避免重複渲染 prompt
+        self._taskBatchesCache: List[Tuple[str, list, str, dict]] = None
+        self._taskBatchesCacheKey: int = None
         logging.info("ExperimentPipeline initialized.")
 
     # ===================== 資料載入 =====================
@@ -68,13 +71,20 @@ class ExperimentPipeline:
 
     # ===================== 任務建構 =====================
 
-    def _buildTaskBatches(self, taskDf: pd.DataFrame) -> List[Tuple[str, list, str]]:
+    def _buildTaskBatches(self, taskDf: pd.DataFrame) -> List[Tuple[str, list, str, dict]]:
         """
         每列預處理一次：parse JSON、依 pairNumber 切片、format userPrompt。
         避免在 model × prompt 迴圈內重複計算。
 
-        :return: [(taskID, pairs, userPrompt), ...]
+        以 taskDf 的 id() 當 cache key：同一 DataFrame 物件多次呼叫直接取快取，避免 preview 與 build 兩階段重複渲染。
+        若呼叫端傳入新的 DataFrame（不同物件），會自動重算。
+
+        :return: [(taskID, pairs, userPrompt, context), ...]
         """
+        cacheKey = id(taskDf)
+        if self._taskBatchesCacheKey == cacheKey and self._taskBatchesCache is not None:
+            return self._taskBatchesCache
+
         pairNumber = self.config.pairNumber
         rowsList = []
         for _, row in taskDf.iterrows():
@@ -86,7 +96,10 @@ class ExperimentPipeline:
                 batchPairs = allPairs[offset:offset + pairNumber]
                 batchID = f"{taskBaseID}_{offset}" if len(allPairs) > pairNumber else taskBaseID
                 userPrompt = self.formatter.format(context, batchPairs)
-                rowsList.append((batchID, batchPairs, userPrompt))
+                rowsList.append((batchID, batchPairs, userPrompt, context))
+
+        self._taskBatchesCache = rowsList
+        self._taskBatchesCacheKey = cacheKey
         return rowsList
 
     def doSavePromptPreview(self, taskDf: pd.DataFrame, promptCmbList: List[Dict[str, str]]):
@@ -97,7 +110,7 @@ class ExperimentPipeline:
         rowsList = self._buildTaskBatches(taskDf)
         records = []
         for prompt in promptCmbList:
-            for taskID, _, userPrompt in rowsList:
+            for taskID, _, userPrompt, _ in rowsList:
                 records.append({
                     'taskID':     taskID,
                     'promptID':   prompt['promptID'],
@@ -135,7 +148,7 @@ class ExperimentPipeline:
         skippedCount = 0
 
         for model, promptID, sysPrompt in self._iterPromptCombinations(promptCmbList):
-            for taskBaseID, pairsList, userPrompt in rowsList:
+            for taskBaseID, pairsList, userPrompt, contextDict in rowsList:
                 fullTaskID = f"{model}::{promptID}::{taskBaseID}"
                 if fullTaskID in completedIDSet:
                     skippedCount += 1
@@ -147,6 +160,7 @@ class ExperimentPipeline:
                     sysPrompt=sysPrompt,
                     userPrompt=userPrompt,
                     pairs=pairsList,
+                    context=contextDict,
                 ))
 
         if skippedCount > 0:
@@ -159,6 +173,7 @@ class ExperimentPipeline:
     def doGetCompletedTasks(self) -> Set[str]:
         """
         讀取推論暫存檔，取得所有已完成任務的 taskID，用於斷點續傳。
+        會同時驗證 schema：缺少必要欄位時直接拋錯，避免下游 OutputParser 拿到殘缺資料。
         """
         completedIDSet: Set[str] = set()
         path = self.paths.rawOutputPath
@@ -171,10 +186,14 @@ class ExperimentPipeline:
             logging.warning(f"Failed to read checkpoint, starting fresh: {e}")
             return completedIDSet
 
-        if 'taskID' in checkpointDf.columns:
-            completedIDSet.update(checkpointDf['taskID'].dropna().astype(str).str.strip().tolist())
-        else:
-            logging.warning("Checkpoint file missing 'taskID' column.")
+        missingCols = set(RAW_CSV_SCHEMA) - set(checkpointDf.columns)
+        if missingCols:
+            raise DataLoadError(
+                f"raw.csv schema 不符，缺欄位: {sorted(missingCols)}（可能是舊版產出或外部覆寫）。"
+                f" 請刪除或備份 {path} 後重跑。"
+            )
+
+        completedIDSet.update(checkpointDf['taskID'].dropna().astype(str).str.strip().tolist())
         logging.info(f"Checkpoint loaded: {len(completedIDSet)} completed tasks.")
 
         return completedIDSet
@@ -198,7 +217,14 @@ class ExperimentPipeline:
 
         logging.info(f"Dispatching {len(tasksToRunList)} tasks to async engine...")
         taskDictList = [task.model_dump() for task in tasksToRunList]
-        asyncio.run(engineObj.doExecuteTaskBatches(taskDictList))
+
+        async def runAndClose():
+            try:
+                await engineObj.doExecuteTaskBatches(taskDictList)
+            finally:
+                await engineObj.doClose()
+
+        asyncio.run(runAndClose())
         logging.info(f"Inference complete. Raw output saved to: {self.paths.rawOutputPath}")
 
     # ===================== 主流程 =====================
@@ -253,9 +279,12 @@ class ExperimentPipeline:
         ).run()
 
         self._logStep(6, "Evaluating")
+        # 傳入 context + pair 欄作為 index 欄白名單，避免數值型欄位（如全 0/1 的旗標）被當預測欄
+        evalIndexCols = list(self.config.contextColumns) + list(self.config.pairColumns or [])
         PromptCmbEval(
             inputCsvPath=processedPath,
             outputBaseDir=self.paths.evalDir,
+            contextColumns=evalIndexCols,
         ).run()
 
         logging.info("Pipeline completed successfully!")

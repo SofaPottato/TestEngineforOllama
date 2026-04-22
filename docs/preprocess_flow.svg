@@ -1,0 +1,215 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1100" height="760" viewBox="0 0 1100 760" font-family="'Segoe UI', Arial, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+    </marker>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#1565c0"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2e7d32"/>
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="550" y="28" text-anchor="middle" font-size="18" font-weight="bold" fill="#1a237e">LLL 前處理：原始 CSV → Task CSV → Pipeline 消費</text>
+  <text x="550" y="48" text-anchor="middle" font-size="11" fill="#666">preprocess/lll.py 轉換流程，以及下游模組如何讀取每一個欄位</text>
+
+  <!-- ========= STAGE 1: Raw CSV ========= -->
+  <g>
+    <rect x="30" y="80" width="300" height="230" rx="10" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+    <text x="180" y="103" text-anchor="middle" font-size="13" font-weight="bold" fill="#e65100">① 原始資料集</text>
+    <text x="180" y="120" text-anchor="middle" font-size="10" fill="#666" font-family="monospace">data/PPI/LLL-train.csv</text>
+
+    <!-- columns header -->
+    <rect x="48" y="135" width="264" height="22" fill="#ffcc80"/>
+    <text x="60" y="150" font-size="10" font-weight="bold" fill="#4e342e" font-family="monospace">docid</text>
+    <text x="115" y="150" font-size="10" font-weight="bold" fill="#4e342e" font-family="monospace">isValid</text>
+    <text x="175" y="150" font-size="10" font-weight="bold" fill="#4e342e" font-family="monospace">passage</text>
+    <text x="255" y="150" font-size="10" font-weight="bold" fill="#4e342e" font-family="monospace">passageid</text>
+
+    <!-- rows -->
+    <rect x="48" y="157" width="264" height="20" fill="#fff"/>
+    <text x="60" y="171" font-size="9" fill="#333" font-family="monospace">LLL.d0</text>
+    <text x="115" y="171" font-size="9" fill="#333" font-family="monospace">TRUE</text>
+    <text x="175" y="171" font-size="9" fill="#333" font-family="monospace">In vivo...</text>
+    <text x="255" y="171" font-size="9" fill="#333" font-family="monospace">LLL.d0.s0</text>
+
+    <rect x="48" y="177" width="264" height="20" fill="#fafafa"/>
+    <text x="60" y="191" font-size="9" fill="#333" font-family="monospace">LLL.d1</text>
+    <text x="115" y="191" font-size="9" fill="#333" font-family="monospace">FALSE</text>
+    <text x="175" y="191" font-size="9" fill="#333" font-family="monospace">In this...</text>
+    <text x="255" y="191" font-size="9" fill="#333" font-family="monospace">LLL.d1.s0</text>
+
+    <rect x="48" y="197" width="264" height="20" fill="#fff"/>
+    <text x="60" y="211" font-size="9" fill="#333" font-family="monospace">LLL.d2</text>
+    <text x="115" y="211" font-size="9" fill="#333" font-family="monospace">TRUE</text>
+    <text x="175" y="211" font-size="9" fill="#333" font-family="monospace">GerE...</text>
+    <text x="255" y="211" font-size="9" fill="#333" font-family="monospace">LLL.d2.s1</text>
+
+    <!-- explanation -->
+    <text x="48" y="240" font-size="10" font-weight="bold" fill="#bf360c">欄位意義：</text>
+    <text x="48" y="256" font-size="9.5" fill="#5d4037">• isValid : TRUE/FALSE 字串（ground truth）</text>
+    <text x="48" y="270" font-size="9.5" fill="#5d4037">• passage : 已替換為 PROTEIN/PROTEIN1/2 的句子</text>
+    <text x="48" y="284" font-size="9.5" fill="#5d4037">• passageid : 句子層級 ID（同句多 pair 會重複）</text>
+    <text x="48" y="298" font-size="9.5" fill="#5d4037">• docid : 文件 ID（前處理不使用）</text>
+  </g>
+
+  <!-- ========= STAGE 2: preprocess script ========= -->
+  <g>
+    <rect x="390" y="100" width="260" height="190" rx="10" fill="#e8eaf6" stroke="#283593" stroke-width="2"/>
+    <text x="520" y="122" text-anchor="middle" font-size="13" font-weight="bold" fill="#283593">② preprocess/lll.py</text>
+    <text x="520" y="139" text-anchor="middle" font-size="10" fill="#666" font-family="monospace">每列 → 一筆 task</text>
+
+    <text x="405" y="162" font-size="10.5" font-weight="bold" fill="#1a237e">轉換規則：</text>
+    <text x="405" y="180" font-size="9.5" fill="#303f9f" font-family="monospace">taskID  = passageid + "_" + i</text>
+    <text x="405" y="195" font-size="9.5" fill="#303f9f" font-family="monospace">passage = passage（原樣帶入）</text>
+    <text x="405" y="210" font-size="9.5" fill="#303f9f" font-family="monospace">label   = "true" if isValid</text>
+    <text x="425" y="223" font-size="9.5" fill="#303f9f" font-family="monospace">else "false"</text>
+
+    <text x="405" y="245" font-size="10.5" font-weight="bold" fill="#1a237e">pairs 組裝（LLL 固定）：</text>
+    <text x="405" y="262" font-size="9" fill="#303f9f" font-family="monospace">[{"id": i, "label": label,</text>
+    <text x="410" y="276" font-size="9" fill="#303f9f" font-family="monospace">"e1":"PROTEIN1",</text>
+    <text x="410" y="288" font-size="9" fill="#303f9f" font-family="monospace">"e2":"PROTEIN2"}]</text>
+  </g>
+
+  <!-- arrow raw -> preprocess -->
+  <line x1="330" y1="195" x2="388" y2="195" stroke="#555" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ========= STAGE 3: Task CSV ========= -->
+  <g>
+    <rect x="720" y="80" width="350" height="230" rx="10" fill="#e8f5e9" stroke="#1b5e20" stroke-width="2"/>
+    <text x="895" y="103" text-anchor="middle" font-size="13" font-weight="bold" fill="#1b5e20">③ Task CSV（前處理輸出）</text>
+    <text x="895" y="120" text-anchor="middle" font-size="10" fill="#666" font-family="monospace">data/PPI/LLL/LLL-tasks.csv</text>
+
+    <rect x="738" y="135" width="314" height="22" fill="#a5d6a7"/>
+    <text x="750" y="150" font-size="10" font-weight="bold" fill="#1b5e20" font-family="monospace">taskID</text>
+    <text x="830" y="150" font-size="10" font-weight="bold" fill="#1b5e20" font-family="monospace">passage</text>
+    <text x="950" y="150" font-size="10" font-weight="bold" fill="#1b5e20" font-family="monospace">pairs (JSON)</text>
+
+    <rect x="738" y="157" width="314" height="20" fill="#fff"/>
+    <text x="750" y="171" font-size="9" fill="#333" font-family="monospace">LLL.d0.s0_0</text>
+    <text x="830" y="171" font-size="9" fill="#333" font-family="monospace">In vivo...</text>
+    <text x="950" y="171" font-size="9" fill="#333" font-family="monospace">[{id:0,label:true,...}]</text>
+
+    <rect x="738" y="177" width="314" height="20" fill="#fafafa"/>
+    <text x="750" y="191" font-size="9" fill="#333" font-family="monospace">LLL.d0.s0_1</text>
+    <text x="830" y="191" font-size="9" fill="#333" font-family="monospace">In vivo...</text>
+    <text x="950" y="191" font-size="9" fill="#333" font-family="monospace">[{id:1,label:false,...}]</text>
+
+    <rect x="738" y="197" width="314" height="20" fill="#fff"/>
+    <text x="750" y="211" font-size="9" fill="#333" font-family="monospace">LLL.d1.s0_3</text>
+    <text x="830" y="211" font-size="9" fill="#333" font-family="monospace">In this...</text>
+    <text x="950" y="211" font-size="9" fill="#333" font-family="monospace">[{id:3,label:false,...}]</text>
+
+    <text x="738" y="240" font-size="10" font-weight="bold" fill="#1b5e20">欄位意義（Pipeline 標準格式）：</text>
+    <text x="738" y="256" font-size="9.5" fill="#2e7d32">• taskID : 每筆 task 唯一 ID</text>
+    <text x="738" y="270" font-size="9.5" fill="#2e7d32">• passage : context 欄位（由 contextColumns 宣告）</text>
+    <text x="738" y="284" font-size="9.5" fill="#2e7d32">• pairs : JSON array，攜帶 id / label / e1 / e2</text>
+    <text x="738" y="298" font-size="9.5" fill="#2e7d32">  （id 識別、label 是 trueLabel、e1/e2 填入 pairTemplate）</text>
+  </g>
+
+  <!-- arrow preprocess -> task csv -->
+  <line x1="650" y1="195" x2="718" y2="195" stroke="#555" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- ========= Divider ========= -->
+  <line x1="40" y1="340" x2="1060" y2="340" stroke="#bdbdbd" stroke-width="1.2" stroke-dasharray="6,4"/>
+  <text x="550" y="358" text-anchor="middle" font-size="13" font-weight="bold" fill="#37474f">▼ 下游 Pipeline 如何讀取各欄位</text>
+
+  <!-- ========= STAGE 4: Column consumers ========= -->
+  <!-- taskID -->
+  <g>
+    <rect x="40" y="385" width="310" height="110" rx="8" fill="#fff" stroke="#1565c0" stroke-width="1.8"/>
+    <rect x="40" y="385" width="310" height="24" rx="8" fill="#1565c0"/>
+    <text x="55" y="402" font-size="12" font-weight="bold" fill="#fff" font-family="monospace">taskID</text>
+
+    <text x="55" y="428" font-size="10" fill="#0d47a1"><tspan font-weight="bold">讀取處：</tspan> Pipeline._buildTaskBatches()</text>
+    <text x="55" y="444" font-size="9.5" fill="#0d47a1" font-family="monospace">Pipeline.py:81</text>
+    <text x="55" y="462" font-size="10" fill="#0d47a1"><tspan font-weight="bold">用途：</tspan></text>
+    <text x="55" y="477" font-size="9.5" fill="#333">• 批次模式時當 prefix：{taskID}_{offset}</text>
+    <text x="55" y="490" font-size="9.5" fill="#333">• 最終成為 OutputParser 輸出的 dataID 根</text>
+  </g>
+
+  <!-- passage (context) -->
+  <g>
+    <rect x="395" y="385" width="310" height="110" rx="8" fill="#fff" stroke="#6a1b9a" stroke-width="1.8"/>
+    <rect x="395" y="385" width="310" height="24" rx="8" fill="#6a1b9a"/>
+    <text x="410" y="402" font-size="12" font-weight="bold" fill="#fff" font-family="monospace">passage  ← contextColumns</text>
+
+    <text x="410" y="428" font-size="10" fill="#4a148c"><tspan font-weight="bold">讀取處：</tspan> Pipeline + PromptFormatter</text>
+    <text x="410" y="444" font-size="9.5" fill="#4a148c" font-family="monospace">Pipeline.py:82 / PromptFormatter.py</text>
+    <text x="410" y="462" font-size="10" fill="#4a148c"><tspan font-weight="bold">用途：</tspan></text>
+    <text x="410" y="477" font-size="9.5" fill="#333">• 填入 taskTemplate 的 {passage} 佔位符</text>
+    <text x="410" y="490" font-size="9.5" fill="#333">• 欄位名須與 config.contextColumns 對應</text>
+  </g>
+
+  <!-- pairs -->
+  <g>
+    <rect x="750" y="385" width="310" height="110" rx="8" fill="#fff" stroke="#2e7d32" stroke-width="1.8"/>
+    <rect x="750" y="385" width="310" height="24" rx="8" fill="#2e7d32"/>
+    <text x="765" y="402" font-size="12" font-weight="bold" fill="#fff" font-family="monospace">pairs (JSON array)</text>
+
+    <text x="765" y="428" font-size="10" fill="#1b5e20"><tspan font-weight="bold">讀取處：</tspan> parseJsonField → 多處消費</text>
+    <text x="765" y="444" font-size="9.5" fill="#1b5e20" font-family="monospace">Pipeline.py:83</text>
+    <text x="765" y="462" font-size="10" fill="#1b5e20"><tspan font-weight="bold">依 pairNumber 切批次：</tspan></text>
+    <text x="765" y="477" font-size="9.5" fill="#333">• pairNumber=1 → 單筆模式（LLL 預設）</text>
+    <text x="765" y="490" font-size="9.5" fill="#333">• pairNumber&gt;1 → 批次模式（pairs 切片）</text>
+  </g>
+
+  <!-- ========= STAGE 5: pair fields expanded ========= -->
+  <g>
+    <rect x="40" y="515" width="1020" height="170" rx="10" fill="#fafafa" stroke="#616161" stroke-width="1.5"/>
+    <text x="550" y="538" text-anchor="middle" font-size="12" font-weight="bold" fill="#424242">pairs 內每個物件的 key 如何被使用</text>
+
+    <!-- id -->
+    <rect x="60" y="555" width="220" height="115" rx="6" fill="#fff" stroke="#00838f" stroke-width="1.5"/>
+    <text x="170" y="575" text-anchor="middle" font-size="12" font-weight="bold" fill="#00838f" font-family="monospace">id</text>
+    <line x1="70" y1="582" x2="270" y2="582" stroke="#b2ebf2"/>
+    <text x="70" y="600" font-size="9.5" fill="#006064"><tspan font-weight="bold">讀取處：</tspan> OutputParser.py:132</text>
+    <text x="70" y="615" font-size="9.5" fill="#333">→ 輸出為 dataID 欄</text>
+    <text x="70" y="632" font-size="9" fill="#555">每一個 pair 展開為一列</text>
+    <text x="70" y="646" font-size="9" fill="#555">結果時回到對應 ground truth</text>
+    <text x="70" y="660" font-size="9" fill="#555" font-style="italic">不進入 prompt</text>
+
+    <!-- label -->
+    <rect x="300" y="555" width="220" height="115" rx="6" fill="#fff" stroke="#c62828" stroke-width="1.5"/>
+    <text x="410" y="575" text-anchor="middle" font-size="12" font-weight="bold" fill="#c62828" font-family="monospace">label</text>
+    <line x1="310" y1="582" x2="510" y2="582" stroke="#ffcdd2"/>
+    <text x="310" y="600" font-size="9.5" fill="#b71c1c"><tspan font-weight="bold">讀取處：</tspan> OutputParser.py:135</text>
+    <text x="310" y="615" font-size="9.5" fill="#333">→ trueLabel 欄</text>
+    <text x="310" y="632" font-size="9" fill="#555">LLMResultProcessor 用 labelMap</text>
+    <text x="310" y="646" font-size="9" fill="#555">正規化為 1 / 0 / -1</text>
+    <text x="310" y="660" font-size="9" fill="#555" font-style="italic">不進入 prompt</text>
+
+    <!-- e1/e2 -->
+    <rect x="540" y="555" width="220" height="115" rx="6" fill="#fff" stroke="#ef6c00" stroke-width="1.5"/>
+    <text x="650" y="575" text-anchor="middle" font-size="12" font-weight="bold" fill="#ef6c00" font-family="monospace">e1, e2  ← pairColumns</text>
+    <line x1="550" y1="582" x2="750" y2="582" stroke="#ffe0b2"/>
+    <text x="550" y="600" font-size="9.5" fill="#e65100"><tspan font-weight="bold">讀取處：</tspan> PromptFormatter.py</text>
+    <text x="550" y="615" font-size="9.5" fill="#333">→ 填入 pairTemplate 佔位符</text>
+    <text x="550" y="632" font-size="9" fill="#555">LLL 固定為 PROTEIN1/PROTEIN2</text>
+    <text x="550" y="646" font-size="9" fill="#555">（passage 已把實體替換掉了）</text>
+    <text x="550" y="660" font-size="9" fill="#555" font-style="italic">進入 userPrompt</text>
+
+    <!-- 自訂欄位 -->
+    <rect x="780" y="555" width="260" height="115" rx="6" fill="#fff" stroke="#5e35b2" stroke-width="1.5"/>
+    <text x="910" y="575" text-anchor="middle" font-size="12" font-weight="bold" fill="#5e35b2" font-family="monospace">其他 key（選填）</text>
+    <line x1="790" y1="582" x2="1030" y2="582" stroke="#d1c4e9"/>
+    <text x="790" y="600" font-size="9.5" fill="#4527a0"><tspan font-weight="bold">讀取處：</tspan> OutputParser.py:141-143</text>
+    <text x="790" y="615" font-size="9.5" fill="#333">→ 以同名欄位落到輸出 CSV</text>
+    <text x="790" y="632" font-size="9" fill="#555">不在 id/label 也不在 pairColumns</text>
+    <text x="790" y="646" font-size="9" fill="#555">的 key 會成為自訂欄（可用來追蹤）</text>
+    <text x="790" y="660" font-size="9" fill="#555" font-style="italic">不進入 prompt</text>
+  </g>
+
+  <!-- connecting arrows from top row to expanded pair fields -->
+  <path d="M905,495 L905,515" stroke="#2e7d32" stroke-width="1.5" fill="none" marker-end="url(#arrowGreen)"/>
+
+  <!-- Footer note -->
+  <text x="550" y="715" text-anchor="middle" font-size="10" fill="#666">
+    Pipeline 驗證必要欄位：<tspan font-family="monospace" fill="#333">{'taskID','pairs'} ∪ contextColumns</tspan>（Pipeline.py:44）
+  </text>
+  <text x="550" y="732" text-anchor="middle" font-size="10" fill="#666">
+    每一個 pair 的最低 key：<tspan font-family="monospace" fill="#333">id, label</tspan> + <tspan font-family="monospace" fill="#333">pairColumns</tspan> 宣告的欄位（LLL 為 e1, e2）
+  </text>
+</svg>

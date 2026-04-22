@@ -83,6 +83,8 @@ class OutputParser:
             rawDf = pd.read_csv(str(self.rawCsvPath), encoding='utf-8-sig')
             parsedRowsList = []
 
+            hasContextCol = 'context' in rawDf.columns
+
             for _, taskRow in rawDf.iterrows():
                 model = taskRow.get('model')
                 promptID = taskRow.get('promptID')
@@ -104,17 +106,35 @@ class OutputParser:
                     logging.warning(f"Failed to parse pairs JSON: {e}")
                     pairsList = []
 
+                # 讀取 context JSON（task 層級欄位：title/abstract/passage 等）
+                contextDict: dict = {}
+                if hasContextCol:
+                    contextRaw = taskRow.get('context', '{}')
+                    if not pd.isna(contextRaw):
+                        try:
+                            if isinstance(contextRaw, str) and contextRaw.strip():
+                                contextDict = json.loads(contextRaw)
+                            elif isinstance(contextRaw, dict):
+                                contextDict = contextRaw
+                        except Exception as e:
+                            logging.warning(f"Failed to parse context JSON: {e}")
+
                 if not pairsList:
                     logging.error(f"Empty pairs for task (Model: {model}, Prompt: {promptID})")
                     continue
 
                 parsedAnswersList = self.doExtractAnswers(rawOutput, len(pairsList))
 
+                # 當 pair 沒帶 id 時（例如 PPI 單句資料集），用 taskID 最後一段當 fallback
+                rawTaskID = str(taskRow.get('taskID', ''))
+                baseTaskID = rawTaskID.split('::')[-1]
+
                 for j, pair in enumerate(pairsList):
                     predLabel = parsedAnswersList[j] if j < len(parsedAnswersList) else -1
 
+                    fallbackID = f"{baseTaskID}_{j}" if len(pairsList) > 1 else baseTaskID
                     rowDict = {
-                        "dataID": pair.get('id', ''),
+                        "dataID": pair.get('id') or fallbackID,
                         "Model": model,
                         "promptID": promptID,
                         "trueLabel": pair.get('label', ''),
@@ -125,6 +145,11 @@ class OutputParser:
                     # 自訂欄位展開（id/label 以外的欄位）
                     for fieldName, fieldVal in pair.items():
                         if fieldName not in ('id', 'label'):
+                            rowDict[fieldName] = fieldVal
+
+                    # Task 層級 context 欄位（避免覆蓋 pair 欄位）
+                    for fieldName, fieldVal in contextDict.items():
+                        if fieldName not in rowDict:
                             rowDict[fieldName] = fieldVal
 
                     parsedRowsList.append(rowDict)

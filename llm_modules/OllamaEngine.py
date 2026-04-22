@@ -13,6 +13,12 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from tqdm.asyncio import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 
+# raw.csv 寫入欄位順序的單一事實來源；下游讀檔時應據此驗證。
+RAW_CSV_SCHEMA: List[str] = [
+    "timestamp", "taskID", "model", "promptID",
+    "systemPrompt", "userPrompt", "rawOutput", "pairs", "context",
+]
+
 class OllamaClient:
     """
     非同步的 API 客戶端，負責與 Ollama 伺服器進行通訊與錯誤重試。
@@ -140,12 +146,14 @@ class LLMEngine:
             systemPrompt = task.get('sysPrompt', '')
             userPrompt = task.get('userPrompt', '')
             pairs = task.get('pairs', [])
+            context = task.get('context', {}) or {}
         else:
             taskID = str(getattr(task, 'taskID', 'unknown_taskID'))
             model = str(getattr(task, 'model', 'unknown_model'))
             systemPrompt = getattr(task, 'sysPrompt', '')
             userPrompt = getattr(task, 'userPrompt', '')
             pairs = getattr(task, 'pairs', [])
+            context = getattr(task, 'context', {}) or {}
 
         if taskID in self.existingTaskIDSet:
             # 若 taskID 已存在於已完成集合中，直接返回原始任務資料，不重送 API 請求
@@ -172,6 +180,7 @@ class LLMEngine:
             completedTaskDict['timestamp'] = time.strftime("%Y-%m-%d %H:%M:%S")
 
             pairsJsonStr = json.dumps(pairs, ensure_ascii=False)  # 序列化為 JSON 字串存入 CSV
+            contextJsonStr = json.dumps(context, ensure_ascii=False)
 
             rowDataDict = {
                 "timestamp": completedTaskDict['timestamp'],
@@ -181,7 +190,8 @@ class LLMEngine:
                 "systemPrompt": systemPrompt,
                 "userPrompt": userPrompt,
                 "rawOutput": rawOutput,
-                "pairs": pairsJsonStr
+                "pairs": pairsJsonStr,
+                "context": contextJsonStr,
             }
 
             async with self.fileLockObj:
@@ -189,7 +199,8 @@ class LLMEngine:
                 self.existingTaskIDSet.add(taskID)  # 在鎖內更新，確保不會有重複寫入的競態條件
                 b_fileExists = os.path.isfile(self.outputFile)
                 with open(self.outputFile, 'a', encoding='utf-8-sig', newline='') as f:
-                    csvWriterObj = csv.DictWriter(f, fieldnames=rowDataDict.keys())
+                    # 固定 fieldnames 為 RAW_CSV_SCHEMA，保證欄位順序穩定且與下游驗證一致
+                    csvWriterObj = csv.DictWriter(f, fieldnames=RAW_CSV_SCHEMA)
                     if not b_fileExists:
                         csvWriterObj.writeheader()  # 首次建檔才寫表頭
                     csvWriterObj.writerow(rowDataDict)
@@ -256,3 +267,7 @@ class LLMEngine:
         # 攤平二維 List（每個模型群組各產生一個 list）為一維
         finalResultList = [item for sublist in groupedResultList for item in sublist]
         return finalResultList
+
+    async def doClose(self):
+        """釋放底層 httpx 連線池。Pipeline 結束時務必呼叫，避免長跑洩漏 TCP 連線。"""
+        await self.ollamaClientObj.doClose()

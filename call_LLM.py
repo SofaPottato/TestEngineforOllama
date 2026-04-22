@@ -1,32 +1,29 @@
 # call_LLM.py (主程式)
 import argparse
 import logging
+import sys
 from llm_modules.utils import ReadLLMConfig, initializeGlobalLogger, setupSeed
 from llm_modules.Pipeline import ExperimentPipeline
 
-def startLLMPipeline():
+def startLLMPipeline() -> int:
     parser = argparse.ArgumentParser(description="LLM Inference Runner")
-    parser.add_argument('--config', type=str, default='configs/LLM_PPI_config.yaml', help='Path to YAML configDict file')
+    parser.add_argument('--config', type=str, default='configs/PPI_config.yaml', help='Path to YAML configDict file')
     args = parser.parse_args()
-    initializeGlobalLogger(logDir="./logs", logName=f"testLog.log")
+    initializeGlobalLogger(logDir="./logs", logName="testLog.log")
     setupSeed(42)
-    
+
     logging.info("========================================")
     logging.info("        Ollama            ")
     logging.info("========================================")
 
     try:
-        # 1. 載入並解析設定檔與路徑
         configManager = ReadLLMConfig(args.config)
-        
-        # 2. 將 ConfigManager 傳給 Pipeline
         pipeline = ExperimentPipeline(configManager.config)
-
-        # 3. 執行
         pipeline.run()
-        
+        return 0
     except Exception as e:
-        logging.critical(f"❌ 發生未預期的錯誤: {e}", exc_info=True)
+        logging.critical(f"發生未預期的錯誤: {e}", exc_info=True)
+        return 1
 
 if __name__ == "__main__":
-    startLLMPipeline()
+    sys.exit(startLLMPipeline())

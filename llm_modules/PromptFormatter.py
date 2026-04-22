@@ -1,4 +1,27 @@
+import logging
 from typing import Dict, List, Optional
+
+
+class _SafeDict(dict):
+    """
+    給 str.format_map 用的容錯字典：
+    - 缺漏的 key 回傳原始 '{key}' 佔位符（保留可見性，方便人工發現缺值）
+    - 值會強制轉成 str，避免 None / 數值型導致格式化異常
+    """
+    def __missing__(self, key):
+        logging.warning(f"PromptFormatter: 模板佔位符 {{{key}}} 在資料中不存在，保留原樣。")
+        return '{' + key + '}'
+
+
+def _safeFormat(template: str, fields: Dict) -> str:
+    """
+    用 format_map 套版，並把所有值轉 str。
+    比 str.replace 安全：
+    - 不會被資料內容裡的 '{xxx}' 字串污染
+    - 缺欄位時會記 warning，不會靜默吞掉
+    """
+    safeFields = _SafeDict({k: ('' if v is None else str(v)) for k, v in fields.items()})
+    return template.format_map(safeFields)
 
 
 class PromptFormatter:
@@ -41,11 +64,10 @@ class PromptFormatter:
     def _formatBatch(self, context: Dict, pairs: List[Dict]) -> str:
         pairsText = ""
         for i, pair in enumerate(pairs, 1):
-            pairsText += self.pairTemplate.format(i=i, **self._extractPairFields(pair))
+            pairsText += _safeFormat(self.pairTemplate, {'i': i, **self._extractPairFields(pair)})
 
-        prompt = self.taskTemplate
-        for k, v in context.items():
-            prompt = prompt.replace('{' + k + '}', str(v))
+        # context 與 pairs 兩段分開填，避免資料中含 '{pairs}' 字面量被誤展開
+        prompt = _safeFormat(self.taskTemplate, {**context, 'pairs': '{pairs}'})
         prompt = prompt.replace('{pairs}', pairsText)
         return prompt
 
@@ -53,8 +75,4 @@ class PromptFormatter:
         allFields = dict(context)
         if pairs:
             allFields.update(self._extractPairFields(pairs[0]))
-
-        prompt = self.taskTemplate
-        for k, v in allFields.items():
-            prompt = prompt.replace('{' + k + '}', str(v))
-        return prompt
+        return _safeFormat(self.taskTemplate, allFields)

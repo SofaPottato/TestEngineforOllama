@@ -143,3 +143,4 @@ class LLMTask(BaseModel):
     sysPrompt: str = Field(default="", description="系統提示詞")
     userPrompt: str = Field(..., min_length=1, description="使用者提示詞")
     pairs: List[Dict[str, Any]] = Field(default_factory=list, description="此任務包含的 pair 清單（含 id/label）")
+    context: Dict[str, Any] = Field(default_factory=dict, description="Task 層級 context 欄位（title/abstract/passage 等，由 contextColumns 決定）")

@@ -8,7 +8,7 @@ LLL 原始欄位：
 標準 Task CSV 欄位（輸出）：
   - taskID:   唯一識別碼，使用 row index（每句一筆 task）
   - passage:  單句文本（對應 taskTemplate 的 {passage} 佔位符）
-  - pairs:    JSON array，包含一對 PROTEIN1/PROTEIN2（e1/e2/label/id）
+  - pairs:    JSON array，只帶 label（實體已固定為 PROTEIN1/PROTEIN2 嵌入句中）
 
 使用方式：
   python preprocess/lll.py
@@ -34,12 +34,7 @@ def preprocess():
     tasks = []
     for i, row in df.iterrows():
         label = "true" if str(row['isValid']).strip().upper() == "TRUE" else "false"
-        pair = [{
-            "id":    str(i),
-            "label": label,
-            "e1":    "PROTEIN1",
-            "e2":    "PROTEIN2"
-        }]
+        pair = [{"label": label}]
         tasks.append({
             "taskID":  str(row['passageid']) + f"_{i}",
             "passage": str(row['passage']),

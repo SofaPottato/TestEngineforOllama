@@ -4,49 +4,67 @@ import matplotlib.pyplot as plt
 import numpy as np
 import logging
 from pathlib import Path
+from typing import Iterable, Optional
 from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score, matthews_corrcoef
 
+# 與預測欄無關、無論資料集都會出現的固定 index 欄
+_BASE_INDEX_COLS = frozenset({'dataID', 'originalLabel'})
+
 class PromptCmbEval:
-    def __init__(self, inputCsvPath: Path, outputBaseDir: Path = Path("./output")):
+    def __init__(self, inputCsvPath: Path, outputBaseDir: Path = Path("./output"),
+                 contextColumns: Optional[Iterable[str]] = None):
         """
         初始化評估系統。
-        讀取寬格式 CSV（每欄一個模型/prompt 組合），計算分類指標並產出圖表與報表。
-
-        預測欄的偵測：trueLabel 欄以外，所有值為數字的欄位視為預測欄。
+        建構子只設定欄位，實際讀檔與產生輸出目錄延後到 run() 進行，
+        方便單元測試與避免 import 期就觸發 I/O 副作用。
 
         :param inputCsvPath: LLMResultProcessor 產出的寬表格 CSV
         :param outputBaseDir: 評估結果（CSV 報表與圖表）的輸出根目錄
+        :param contextColumns: 來自 config 的 context/pair 欄名（用於白名單化 index 欄，避免數值型欄位被誤判為預測欄）
         """
         self.inputCsvPath = Path(inputCsvPath)
-        self.inputDf = pd.read_csv(str(self.inputCsvPath))
+        self.outputDirPath = Path(outputBaseDir)
+        self.plotsDirPath = self.outputDirPath / "plots"
+        self.contextColumns = set(contextColumns) if contextColumns else set()
 
-        # 動態偵測：預測欄的值僅限 {-1, 0, 1}，其餘（dataID, e1, e2, ...）視為 index 欄
-        predValueSet = {-1, 0, 1}
+        self.inputDf = None
         self.predColsList = []
         self.indexColsList = []
+        self.fixedColsList = []
+        self.yTrue = None
+
+        self.resultsList = []
+        self.reportDf = None
+        self.correctnessMatrixDf = None
+        self.hardSamplesDf = None
+        self.upperBound = 0.0
+
+    def _loadData(self):
+        """讀取輸入 CSV 並以白名單分離 index 欄與預測欄。"""
+        if not self.inputCsvPath.exists():
+            raise FileNotFoundError(f"Eval input CSV not found: {self.inputCsvPath}")
+
+        self.inputDf = pd.read_csv(str(self.inputCsvPath))
+
+        # 白名單：base + 來自 config 的 contextColumns + pair 展開欄（e1, e2, chemical, disease, ...）
+        # 任何不在白名單也不是 trueLabel 的欄都視為預測欄；避免「值域剛好是 0/1」的數值欄被誤判
+        indexWhitelist = _BASE_INDEX_COLS | self.contextColumns
         for col in self.inputDf.columns:
             if col == 'trueLabel':
                 continue
-            numericCol = pd.to_numeric(self.inputDf[col], errors='coerce')
-            if numericCol.notna().all() and set(numericCol.unique()).issubset(predValueSet):
-                self.predColsList.append(col)
-            else:
+            if col in indexWhitelist:
                 self.indexColsList.append(col)
+            else:
+                self.predColsList.append(col)
 
         self.fixedColsList = self.indexColsList + ['trueLabel']
-        self.yTrue = self.inputDf['trueLabel']  # 所有樣本的真實標籤（含 -1 的未知值，評估時會被過濾）
+        self.yTrue = self.inputDf['trueLabel']
+        self.correctnessMatrixDf = pd.DataFrame(index=self.inputDf.index)
 
-        self.resultsList = []          # 各模型評估指標的原始紀錄，doEval 後會轉成 reportDf
-        self.reportDf = None           # 評估指標報表（按 F1 排序）
-        self.correctnessMatrixDf = pd.DataFrame(index=self.inputDf.index)  # 每個樣本對每個模型的對錯矩陣
-        self.hardSamplesDf = None      # 所有模型都答錯的難題子集
-        self.upperBound = 0.0          # 理論上限：排除難題後的最高可達準確率
-
-        self.outputDirPath = Path(outputBaseDir)
-        self.plotsDirPath = self.outputDirPath / "plots"  # 混淆矩陣等圖表的存放子目錄
         self.plotsDirPath.mkdir(parents=True, exist_ok=True)
 
         logging.info(f"LLMEvaluationSystem(inputCsvPath='{self.inputCsvPath}', df_shape={self.inputDf.shape}, pred_cols_count={len(self.predColsList)})")
+        logging.info(f"  index cols: {self.indexColsList}")
         logging.info(f"System Initialized. Output directory: {self.outputDirPath}")
 
     def doCalcPromptCmbMetrics(self, yTrueSubset, yPredSubset):
@@ -210,11 +228,12 @@ class PromptCmbEval:
 
     def run(self) -> Path:
         """
-        評估階段的統一入口：依序執行指標計算、理論上限分析、圖表輸出與結果存檔。
-        外部只需呼叫這個方法，不需關心內部五個步驟的順序。
+        評估階段的統一入口：依序載入資料、執行指標計算、理論上限分析、圖表輸出與結果存檔。
+        外部只需呼叫這個方法，不需關心內部步驟的順序。
 
         :return: 評估結果的輸出目錄（供下游引用）
         """
+        self._loadData()
         self.doEval()
         self.doAnalyzeUpperBound()
         self.doPlotConfusionMatrices()

@@ -23,7 +23,8 @@ class LLMResultProcessor:
 
         self.requiredColsList = ['dataID', 'Model', 'promptID', 'predLabel', 'trueLabel']
         self.inputDf = None
-        self.pivotDf = None
+        self.pivotDf = None       # partial 用：只含 predLabel 寬表
+        self.fullPivotDf = None   # full 用：predLabel + rawOutput (__raw 後綴) 寬表
 
         logging.info(f"LLMResultProcessor initialized. Input: {self.inputCsvPath}")
 
@@ -36,6 +37,9 @@ class LLMResultProcessor:
         logging.info(f"Processing data: {self.inputCsvPath}")
 
         self._loadData()
+
+        # 先保留原始標籤字串（給 fullInfo 人工檢視），再把 trueLabel 覆寫為 0/1/-1
+        self.inputDf['originalLabel'] = self.inputDf['trueLabel']
 
         logging.info("Converting True Labels...")
         self.inputDf['trueLabel'] = self.inputDf['trueLabel'].apply(self._convertTrueLabel)
@@ -89,15 +93,20 @@ class LLMResultProcessor:
             return -1
 
     def _getFeatureCols(self) -> List[str]:
-        """回傳 pivot 後的預測欄（由 Feature_Name 展開而來）。"""
+        """回傳 pivot 後的預測欄（由 Feature_Name 展開而來），不含 __raw 後綴欄位。"""
         originalColsSet = set(self.inputDf.columns)
-        return [c for c in self.pivotDf.columns if c not in originalColsSet]
+        return [c for c in self.pivotDf.columns
+                if c not in originalColsSet and not c.endswith('__raw')]
 
     def _pivotData(self):
         """
         將長表格轉置為寬表格。
         動態偵測 index 欄位：除了 Model, promptID, Feature_Name, predLabel, rawOutput 以外的欄位
-        都視為 index（dataID, trueLabel, 以及前處理帶入的自訂欄位如 e1, e2）。
+        都視為 index（dataID, trueLabel, originalLabel, 以及前處理帶入的自訂欄位如 e1, e2, title, abstract, passage）。
+
+        產出兩個寬表：
+          - self.pivotDf     ：只含 predLabel 欄（供 partialInfo / Evaluate）
+          - self.fullPivotDf ：predLabel + rawOutput (後綴 __raw) 欄（供 fullInfo 人工檢視）
         """
         logging.info("Pivoting table (Long to Wide)...")
 
@@ -105,15 +114,28 @@ class LLMResultProcessor:
         indexColsList = [c for c in self.inputDf.columns if c not in nonIndexColsSet]
 
         try:
-            self.pivotDf = self.inputDf.pivot_table(
+            predPivot = self.inputDf.pivot_table(
                 index=indexColsList,
                 columns='Feature_Name',
                 values='predLabel',
                 aggfunc='first'
-            )
-            self.pivotDf = self.pivotDf.reset_index()
-            self.pivotDf = self.pivotDf.fillna(-1)
-            logging.info(f"Pivot completed. Shape: {self.pivotDf.shape}")
+            ).fillna(-1)
+
+            self.pivotDf = predPivot.reset_index()
+            logging.info(f"Pivot (pred) completed. Shape: {self.pivotDf.shape}")
+
+            # 第二 pivot：rawOutput。列名加 __raw 後綴避免與 predLabel 欄衝突
+            rawPivot = self.inputDf.pivot_table(
+                index=indexColsList,
+                columns='Feature_Name',
+                values='rawOutput',
+                aggfunc='first'
+            ).fillna('')
+            rawPivot.columns = [f"{c}__raw" for c in rawPivot.columns]
+
+            # concat 後 reset_index 讓 index 欄變成一般欄位
+            self.fullPivotDf = pd.concat([predPivot, rawPivot], axis=1).reset_index()
+            logging.info(f"Pivot (full) completed. Shape: {self.fullPivotDf.shape}")
         except Exception as e:
             raise PipelineError(f"Pivot failed: {e}") from e
 
@@ -121,7 +143,7 @@ class LLMResultProcessor:
         """
         儲存結果：
         1. 精簡版（outputCsvPath）：僅含 dataID, trueLabel 與各模型預測欄，供 Evaluate 使用
-        2. 完整版（mergedPath）：保留 pivot 的所有欄位（含自訂欄位如 e1/e2），供人工審閱
+        2. 完整版（mergedPath）：保留所有 context/pair 欄位、originalLabel 及每個模型的 rawOutput (__raw)，供人工審閱
 
         :return: 精簡版寬表格路徑
         """
@@ -132,15 +154,29 @@ class LLMResultProcessor:
             leanDf = self.pivotDf[leanColsList]
             leanDf.to_csv(self.outputCsvPath, index=False, encoding='utf-8-sig')
 
-            if self.mergedPath:
-                self.pivotDf.to_csv(self.mergedPath, index=False, encoding='utf-8-sig')
+            if self.mergedPath and self.fullPivotDf is not None:
+                # 欄位順序：識別 → context/pair → 原始/正規化標籤 → 每組 pred → 每組 __raw
+                predCols = [c for c in self.fullPivotDf.columns
+                            if not c.endswith('__raw') and c not in set(self.inputDf.columns)]
+                rawCols = [c for c in self.fullPivotDf.columns if c.endswith('__raw')]
+                indexCols = [c for c in self.fullPivotDf.columns
+                             if c not in predCols and c not in rawCols]
+
+                labelCols = [c for c in ('originalLabel', 'trueLabel') if c in indexCols]
+                idCols = [c for c in ('dataID',) if c in indexCols]
+                otherIndexCols = [c for c in indexCols if c not in labelCols and c not in idCols]
+                orderedCols = idCols + labelCols + predCols + otherIndexCols + rawCols
+
+                self.fullPivotDf[orderedCols].to_csv(self.mergedPath, index=False, encoding='utf-8-sig')
                 logging.info(f"Full info saved to: {self.mergedPath}")
 
             validCount = (self.inputDf['predLabel'] != -1).sum()
             totalCount = len(self.inputDf)
 
             logging.info(f"Processing complete!")
-            logging.info(f"  - Shape: {self.pivotDf.shape}")
+            logging.info(f"  - Partial shape: {self.pivotDf.shape}")
+            if self.fullPivotDf is not None:
+                logging.info(f"  - Full shape: {self.fullPivotDf.shape}")
             logging.info(f"  - Parse rate: {validCount}/{totalCount} ({validCount/totalCount:.1%})")
             logging.info(f"  - Saved to: {self.outputCsvPath}")
 
