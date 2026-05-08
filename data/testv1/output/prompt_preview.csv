@@ -765,7 +765,8 @@ Abstract: background: thrombocytopenia in patients with end-stage liver disease 
 Task: Determine if the Chemical induces the Disease for the following pairs based strictly on the text.
 
 Pairs to analyze:
-{pairs}
+1: Chemical: heparin | Disease: end-stage hepatic failure
+
 
 IMPORTANT OUTPUT RULES:
 1. Output ONLY a numbered list.
@@ -803,7 +804,8 @@ Abstract: takotsubo syndrome (ts), also known as broken heart syndrome, is chara
 Task: Determine if the Chemical induces the Disease for the following pairs based strictly on the text.
 
 Pairs to analyze:
-{pairs}
+1: Chemical: zolmitriptan | Disease: coronary artery vasospasm
+
 
 IMPORTANT OUTPUT RULES:
 1. Output ONLY a numbered list.
@@ -1651,7 +1653,8 @@ Abstract: although statins are generally well-tolerated drugs, recent cases of d
 Task: Determine if the Chemical induces the Disease for the following pairs based strictly on the text.
 
 Pairs to analyze:
-{pairs}
+1: Chemical: creatine | Disease: hepatic damage
+
 
 IMPORTANT OUTPUT RULES:
 1. Output ONLY a numbered list.

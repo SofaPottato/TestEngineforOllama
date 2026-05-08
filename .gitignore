@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# 產生的輸出
+data/*/output/
+data/prompt_output/
+
+# 模型訓練產物
+catboost_info/
+
+# 執行 log
+logs/
+
+# 暫時檔案
+tmp_test/
+
+# IDE
+.idea/
+.vscode/
+.claude/
+
+# 個人備忘
+todo.txt

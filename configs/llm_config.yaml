@@ -15,12 +15,13 @@ paths:
   singlePromptCmbOutputDir: "singleOutput"
   partialInfoPath:          "partialInfo.csv"
   fullInfoPath:             "fullInfo.csv"
+  promptPreviewPath:        "prompt_preview.csv"
   evalDir:                  "eval"
 
 # --- 模型 ---
 selectedModels: ["llama3.2:1b"]
-pairNumber: 10      # 每個 LLM task 包含的 item 數；1 = 單筆模式
-
+maxPairsPerBatch: 10      # 每個 LLM task 包含的 item 數；1 = 單筆模式
+#ppI 固定是一
 # --- Prompt 模板 ---
 # contextColumns：Task CSV 中對應 taskTemplate 佔位符的欄位名稱
 contextColumns: ["title", "abstract"]
@@ -41,14 +42,13 @@ taskTemplate: |
 
 # pairColumns：pairs JSON 中對應 pairTemplate 佔位符的欄位名稱
 pairColumns: ["e1", "e2"]
-
 pairTemplate: |
   {i}: Chemical: {e1} | Disease: {e2}
 
 # --- Ollama 連線 ---
 ollamaServer:
   url:     "http://localhost:11434/api/chat"
-  timeout: 600
+  timeout: 600 #多久會停止等待 Ollama 回應（秒）
 
 # --- 推論參數 ---
 llmOptions:
@@ -56,7 +56,6 @@ llmOptions:
   num_predict:    60
   num_ctx:        8192
   num_gpu:        99
-  repeat_penalty: 1.1
 
 # --- 標籤映射 ---
 labelMap:
@@ -64,5 +63,5 @@ labelMap:
   negative: ["0", "false", "none", "negative"]
 
 # --- 並發控制 ---
-concurrencyPerModel: 2
-maxConcurrentModels: 1
+concurrencyPerModel: 2 #每個模型同時處理多少個 task（不含 Ollama 內部的並發控制）
+maxConcurrentModels: 1 #同時載入多少模型（不含 Ollama 內部的並發控制）

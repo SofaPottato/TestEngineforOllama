@@ -3,10 +3,10 @@ BC5CDR 資料集前處理腳本。
 將原始 CSV 轉為標準 Task CSV 格式，供 Pipeline 使用。
 
 標準 Task CSV 欄位：
-  - taskID:    唯一識別碼（斷點續傳用），格式為 PMID（依 PMID 分組，每組一筆 task）
+  - taskID:    批次層級識別碼，格式為 PMID（依 PMID 分組，每組一筆 task）
   - title:     文章標題（對應 taskTemplate 的 {title} 佔位符）
   - abstract:  文章摘要（對應 taskTemplate 的 {abstract} 佔位符）
-  - pairs:     JSON array，包含該 PMID 下所有 entity pair（id/label/e1/e2）
+  - pairs:     JSON array，包含該 PMID 下所有 entity pair（itemID/label/e1/e2）
 
 使用方式：
   python preprocess/bc5cdr.py
@@ -33,10 +33,10 @@ def preprocess():
     for pmid, group in df.groupby('PMID', sort=False):
         pairs = [
             {
-                'id':    str(row['ID']),
-                'label': str(row['Relation_Type']),
-                'e1':    str(row['E1_Name']),
-                'e2':    str(row['E2_Name'])
+                'itemID': str(row['ID']),
+                'label':  str(row['Relation_Type']),
+                'e1':     str(row['E1_Name']),
+                'e2':     str(row['E2_Name'])
             }
             for _, row in group.iterrows()
         ]

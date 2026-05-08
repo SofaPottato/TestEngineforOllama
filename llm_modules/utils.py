@@ -11,12 +11,19 @@ from typing import Dict, List, Any
 from .schemas import LLMAppConfig, TaskBuildError
 
 
+def sanitizeFilename(name: Any) -> str:
+    """將 promptID / runKey 中的特殊字元置換成 '_'，確保跨 OS 檔名安全。新增字元在此擴充。"""
+    return (str(name)
+            .replace(":", "_")
+            .replace("+", "_")
+            .replace(" ", "_")
+            .replace("/", "_"))
+
+
 def parseJsonField(value: Any, fieldName: str, taskID: str) -> Any:
     """
-    讀取 Task CSV 時將 JSON 欄位字串轉為 Python 物件。
-    - 字串 → json.loads
-    - None / NaN → 拋 TaskBuildError（空值視為資料錯誤，不靜默通過）
-    - 其他（已是 dict/list）→ 原樣回傳
+    解析 Task CSV 的 JSON 欄位字串。
+    None / NaN → raise TaskBuildError；其他非字串 → 原樣回傳；字串 → json.loads（失敗往上拋）。
     """
     if isinstance(value, str):
         return json.loads(value)
@@ -25,44 +32,40 @@ def parseJsonField(value: Any, fieldName: str, taskID: str) -> Any:
     return value
 
 class ReadLLMConfig:
-    """專門負責讀取 LLM 設定檔並驗證型別與路徑"""
+    """讀取 YAML 設定檔並透過 Pydantic (LLMAppConfig) 驗證。"""
     def __init__(self, configPath: str):
-        # 第一步：讀取原始的 YAML 字典
         rawYamlDict = self.loadYamlConfiguration(configPath)
         self.config: LLMAppConfig = LLMAppConfig(**rawYamlDict)
-        
+
     def loadYamlConfiguration(self, path: str) -> Dict[str, Any]:
-        """讀取 YAML 檔案"""
+        """以 UTF-8 載入 YAML 並回傳 dict。"""
         with open(path, 'r', encoding='utf-8') as f:
             return yaml.safe_load(f)
 
 
 def initializeGlobalLogger(logDir="./logs", logName="experiment.log"):
     """
-    設定全域 Logger，同時輸出到檔案與終端機
-    :param logDir: Log 檔案存放目錄
-    :param logName: Log 檔名
+    設定全域 Logger，同時輸出到檔案與標準輸出。
+    httpx logger 拉到 WARNING，避免推論時被連線層 INFO 訊息淹沒。
     """
     os.makedirs(logDir, exist_ok=True)
-    logPath = os.path.join(logDir, logName)
+    logPathStr = os.path.join(logDir, logName)
 
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s:%(levelname)s:%(message)s", 
-        force=True, 
+        format="%(asctime)s:%(levelname)s:%(message)s",
+        force=True,
         handlers=[
-            logging.FileHandler(logPath, encoding='utf-8'),
-            logging.StreamHandler(sys.stdout)               
+            logging.FileHandler(logPathStr, encoding='utf-8'),
+            logging.StreamHandler(sys.stdout)
         ]
     )
     logging.getLogger("httpx").setLevel(logging.WARNING)
-    logging.info(f"📝 Logger initialized. Writing to {logPath}")
+    logging.info(f"[Logger] 初始化完成 → {logPathStr}")
 
 def setupSeed(seed=42):
-    """
-    固定隨機種子，確保實驗可重現 (Reproducibility)
-    """
+    """固定 Python random / NumPy / PYTHONHASHSEED，確保實驗可重現。Ollama 端隨機性由 temperature=0 控制。"""
     random.seed(seed)
     np.random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
-    logging.info(f"Random seed set to {seed}")
+    logging.info(f"[Setup] 隨機種子設定為 {seed}")

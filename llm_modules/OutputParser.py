@@ -3,174 +3,175 @@ import json
 import logging
 import re
 from pathlib import Path
-from typing import List
-from .schemas import ParsingError
+from typing import List, Optional
+from .schemas import ParsingError, LabelMapConfig, RESERVED_PAIR_FIELDS
+from .utils import sanitizeFilename
 
 
 class OutputParser:
-    def __init__(self, rawCsvPath: Path, outputCsvPath: Path, singlePromptCmbOutputDir: Path):
-        """
-        初始化輸出解析器。
-        負責將 LLM 的 Raw Output (字串) 透過 Regex 拆解成結構化的 DataFrame。
+    """
+    將 LLM 純文字回應解析為結構化資料表。
+    raw.csv → result.csv（predLabel 0/1/-1）。
+    single / batch 模式共用同一組關鍵字（來自 labelMapConfig.outputPositive / outputNegative），
+    無法判定一律標 -1，由下游評估時排除。
+    """
 
-        :param rawCsvPath: 推論暫存 CSV 的路徑（由 LLMEngine 逐筆寫入）
-        :param outputCsvPath: 解析後統整 CSV 的輸出路徑
-        :param singlePromptCmbOutputDir: 每個 promptID 單獨存檔的目錄
-        """
-        self.rawCsvPath = Path(rawCsvPath)
-        self.outputCsvPath = Path(outputCsvPath)
+    # 切割 LLM 批次回應的行首編號（如 "1:", "No. 2", "3)"）
+    _NUMBERED_LINE_RE = re.compile(
+        r'\n\s*(?:\s+|No\.?\s*)?\d+\s*[:.)-]',
+        flags=re.IGNORECASE
+    )
+
+    _CSV_KWARGS = {'index': False, 'encoding': 'utf-8-sig'}
+
+    def __init__(self, rawOutputCsvPath: Path, parsedOutputCsvPath: Path, singlePromptCmbOutputDir: Path,
+                 labelMapConfig: Optional[LabelMapConfig] = None):
+        self.rawOutputCsvPath = Path(rawOutputCsvPath)
+        self.parsedOutputCsvPath = Path(parsedOutputCsvPath)
         self.singlePromptCmbOutputDir = Path(singlePromptCmbOutputDir)
-        logging.info("OutputParser Initialized.")
+        self.labelMapConfig = labelMapConfig or LabelMapConfig()
+        self._posKeywords = [k.lower() for k in self.labelMapConfig.outputPositive]
+        self._negKeywords = [k.lower() for k in self.labelMapConfig.outputNegative]
 
-    def doExtractAnswers(self, text: str, batchSize: int) -> List[int]:
+    def run(self) -> Path:
+        """主流程：讀 raw.csv → 逐 task 解析 → pair 展開（long format）→ 排序 → 存檔。"""
+        try:
+            rawDf = self._loadRawCsv()
+            parsedRowsList = self._parseAllTasks(rawDf)
+            parsedDf = self._buildResultDf(parsedRowsList)
+            self._writeOutputs(parsedDf)
+            logging.info(f"[Parser] 解析完成: {len(parsedDf)} 筆 → {self.parsedOutputCsvPath}")
+            return self.parsedOutputCsvPath
+        except ParsingError:
+            raise
+        except Exception as e:
+            raise ParsingError(f"解析暫存檔時發生錯誤: {e}") from e
+
+    # ── 私有流程方法 ─────────────────────────────────────────────────────────
+
+    def _loadRawCsv(self) -> pd.DataFrame:
+        if not self.rawOutputCsvPath.exists():
+            raise ParsingError(f"找不到暫存結果檔案: {self.rawOutputCsvPath}")
+        return pd.read_csv(str(self.rawOutputCsvPath), encoding='utf-8-sig')
+
+    def _parseAllTasks(self, rawDf: pd.DataFrame) -> list:
+        hasContextCol = 'context' in rawDf.columns
+        parsedRowsList = []
+        for _, taskRow in rawDf.iterrows():
+            parsedRowsList.extend(self._parseTaskRow(taskRow, hasContextCol))
+        return parsedRowsList
+
+    def _parseTaskRow(self, taskRow, hasContextCol: bool) -> list:
+        """一列 task row → 展開成多列 rowDict（每個 pair 一列）。"""
+        model    = taskRow.get('model')
+        promptID = taskRow.get('promptID')
+        taskID   = str(taskRow.get('taskID', ''))
+
+        pairsList = self._parseJsonCell(taskRow.get('pairs'), default=[])
+        if not pairsList:
+            logging.warning(f"[Parser] 跳過任務: pairs 為空 (model={model}, promptID={promptID})")
+            return []
+
+        rawOutput   = str(taskRow.get('rawOutput', ''))
+        answers     = self._extractAnswers(rawOutput, len(pairsList))
+        contextDict = (self._parseJsonCell(taskRow.get('context'), default={})
+                       if hasContextCol else {})
+
+        return [
+            self._buildRow(model, promptID, taskID, rawOutput,
+                           pairDict, answers[j], j, len(pairsList), contextDict)
+            for j, pairDict in enumerate(pairsList)
+        ]
+
+    def _buildRow(self, model, promptID, taskID, rawOutput,
+                  pairDict: dict, predLabel: int,
+                  pairIndex: int, totalPairs: int, contextDict: dict) -> dict:
+        """單一 pair + 對應預測標籤 → rowDict。"""
+        itemID = pairDict.get('itemID') or (f"{taskID}_{pairIndex}" if totalPairs > 1 else taskID)
+        rowDict = {
+            "itemID":    itemID,
+            "model":     model,
+            "promptID":  promptID,
+            "trueLabel": pairDict.get('label', ''),
+            "predLabel": predLabel,
+            "rawOutput": rawOutput,
+        }
+        # pair 中非保留欄位（id, e1, e2 等）全部帶入
+        for fieldName, fieldVal in pairDict.items():
+            if fieldName not in RESERVED_PAIR_FIELDS:
+                rowDict[fieldName] = fieldVal
+        # context 欄位補充（pair 優先，不覆蓋）
+        for fieldName, fieldVal in contextDict.items():
+            if fieldName not in rowDict:
+                rowDict[fieldName] = fieldVal
+        return rowDict
+
+    def _buildResultDf(self, parsedRowsList: list) -> pd.DataFrame:
+        if not parsedRowsList:
+            raise ParsingError("解析後沒有產生任何有效資料。")
+        parsedDf = pd.DataFrame(parsedRowsList)
+        return parsedDf.sort_values(['model', 'promptID', 'itemID'])
+
+    def _writeOutputs(self, parsedDf: pd.DataFrame) -> None:
+        """輸出合併版 result.csv，同時按 promptID 分檔。"""
+        parsedDf.to_csv(str(self.parsedOutputCsvPath), **self._CSV_KWARGS)
+        for promptID, groupDf in parsedDf.groupby('promptID'):
+            singleCsvPath = self.singlePromptCmbOutputDir / f"{sanitizeFilename(promptID)}_result.csv"
+            groupDf.to_csv(singleCsvPath, **self._CSV_KWARGS)
+
+    # ── 解析工具方法 ──────────────────────────────────────────────────────────
+
+    @staticmethod
+    def _parseJsonCell(rawValue, default):
         """
-        核心解析邏輯：從 LLM 的文字回應中，切分出每一題的答案。
+        寬鬆解析 raw.csv 的 JSON 欄位（pairs / context）。
+        NaN/None/非法型別 → default；字串 → json.loads（失敗記 warning 後 → default）。
+        """
+        if rawValue is None or (isinstance(rawValue, float) and pd.isna(rawValue)):
+            return default
+        if isinstance(rawValue, (dict, list)):
+            return rawValue
+        if isinstance(rawValue, str):
+            stripped = rawValue.strip()
+            if not stripped:
+                return default
+            try:
+                return json.loads(stripped)
+            except Exception as e:
+                logging.warning(f"[Parser] JSON 欄位解析失敗，回傳 default: {e}")
+                return default
+        return default
 
-        當 batchSize == 1 時（單筆模式），直接對整段回應做關鍵字掃描。
-        當 batchSize > 1 時（批次模式），以編號切分後逐段掃描。
-
-        :param text: LLM 的原始回應字串
-        :param batchSize: 本次批次應有的答案數量
-        :return: 長度為 batchSize 的整數 List，值為 1/0/-1
+    def _extractAnswers(self, text: str, batchSize: int) -> List[int]:
+        """
+        從 LLM 回應切分出每一題的答案，回傳長度為 batchSize 的 list（1/0/-1）。
+        "Error:" 開頭 → 全部 -1；batchSize > 1 → 以行首編號 regex 切段再逐段掃描。
         """
         labelResultsList = [-1] * batchSize
         if not text or "Error:" in text:
             return labelResultsList
 
-        text = text.replace('*', '')
+        text = text.replace('*', '')  # 移除 Markdown 粗體標記，避免干擾關鍵字掃描
 
         if batchSize == 1:
-            blockText = text.lower().strip()
-            if 'yes' in blockText or 'positive' in blockText:
-                labelResultsList[0] = 1
-            elif 'no' in blockText or 'negative' in blockText or 'none' in blockText:
-                labelResultsList[0] = 0
+            labelResultsList[0] = self._scanBlock(text.strip())
             return labelResultsList
 
-        # 批次模式：以編號切分
-        text = "\n" + text.strip()
-        blocksList = re.split(r'\n\s*(?:\s+|No\.?\s*)?\d+\s*[:.)-]', text, flags=re.IGNORECASE)
-        blocksList = blocksList[1:]
-
+        blocks = self._NUMBERED_LINE_RE.split("\n" + text.strip())[1:]
         for i in range(batchSize):
-            if i < len(blocksList):
-                blockText = blocksList[i].lower()
-                if 'yes' in blockText:
-                    labelResultsList[i] = 1
-                elif 'no' in blockText or 'none' in blockText:
-                    labelResultsList[i] = 0
+            if i < len(blocks):
+                labelResultsList[i] = self._scanBlock(blocks[i])
 
         return labelResultsList
 
-    def run(self) -> Path:
+    def _scanBlock(self, blockText: str) -> int:
         """
-        讀取推論暫存 CSV，對每一筆任務套用解析，
-        將 pairs 展開為逐筆資料列，輸出結構化 CSV。
-
-        Raw CSV 欄位：taskID, model, promptID, rawOutput, pairs (JSON array)
-        每個 pair 必帶 id, label；其餘為自訂欄位。
-
-        輸出欄位：dataID, Model, promptID, trueLabel, predLabel, rawOutput, [自訂欄位...]
-
-        :return: 解析後 CSV 的路徑
-        :raises ParsingError: 找不到暫存檔、或解析後無有效資料時
+        Substring 關鍵字掃描，回傳 1 / 0 / -1。
+        正類優先：同時出現正負關鍵字時（如 "yes, but no..."），通常 yes 才是主要答案。
         """
-        logging.info("==== [OutputParser] Parsing LLM Outputs & Building CSV ====")
-        try:
-            if not self.rawCsvPath.exists():
-                raise ParsingError(f"找不到暫存結果檔案: {self.rawCsvPath}")
-
-            rawDf = pd.read_csv(str(self.rawCsvPath), encoding='utf-8-sig')
-            parsedRowsList = []
-
-            hasContextCol = 'context' in rawDf.columns
-
-            for _, taskRow in rawDf.iterrows():
-                model = taskRow.get('model')
-                promptID = taskRow.get('promptID')
-                rawOutput = str(taskRow.get('rawOutput', ''))
-
-                # 讀取 pairs JSON
-                pairsRaw = taskRow.get('pairs', '[]')
-                if pd.isna(pairsRaw):
-                    pairsRaw = '[]'
-
-                try:
-                    if isinstance(pairsRaw, str):
-                        pairsList = json.loads(pairsRaw)
-                    elif isinstance(pairsRaw, list):
-                        pairsList = pairsRaw
-                    else:
-                        pairsList = []
-                except Exception as e:
-                    logging.warning(f"Failed to parse pairs JSON: {e}")
-                    pairsList = []
-
-                # 讀取 context JSON（task 層級欄位：title/abstract/passage 等）
-                contextDict: dict = {}
-                if hasContextCol:
-                    contextRaw = taskRow.get('context', '{}')
-                    if not pd.isna(contextRaw):
-                        try:
-                            if isinstance(contextRaw, str) and contextRaw.strip():
-                                contextDict = json.loads(contextRaw)
-                            elif isinstance(contextRaw, dict):
-                                contextDict = contextRaw
-                        except Exception as e:
-                            logging.warning(f"Failed to parse context JSON: {e}")
-
-                if not pairsList:
-                    logging.error(f"Empty pairs for task (Model: {model}, Prompt: {promptID})")
-                    continue
-
-                parsedAnswersList = self.doExtractAnswers(rawOutput, len(pairsList))
-
-                # 當 pair 沒帶 id 時（例如 PPI 單句資料集），用 taskID 最後一段當 fallback
-                rawTaskID = str(taskRow.get('taskID', ''))
-                baseTaskID = rawTaskID.split('::')[-1]
-
-                for j, pair in enumerate(pairsList):
-                    predLabel = parsedAnswersList[j] if j < len(parsedAnswersList) else -1
-
-                    fallbackID = f"{baseTaskID}_{j}" if len(pairsList) > 1 else baseTaskID
-                    rowDict = {
-                        "dataID": pair.get('id') or fallbackID,
-                        "Model": model,
-                        "promptID": promptID,
-                        "trueLabel": pair.get('label', ''),
-                        "predLabel": predLabel,
-                        "rawOutput": rawOutput
-                    }
-
-                    # 自訂欄位展開（id/label 以外的欄位）
-                    for fieldName, fieldVal in pair.items():
-                        if fieldName not in ('id', 'label'):
-                            rowDict[fieldName] = fieldVal
-
-                    # Task 層級 context 欄位（避免覆蓋 pair 欄位）
-                    for fieldName, fieldVal in contextDict.items():
-                        if fieldName not in rowDict:
-                            rowDict[fieldName] = fieldVal
-
-                    parsedRowsList.append(rowDict)
-
-            parsedDf = pd.DataFrame(parsedRowsList)
-
-            if parsedDf.empty:
-                raise ParsingError("解析後沒有產生任何有效資料。")
-
-            parsedDf = parsedDf.sort_values(['Model', 'promptID', 'dataID'])
-            parsedDf.to_csv(str(self.outputCsvPath), index=False, encoding='utf-8-sig')
-
-            for promptID, groupDf in parsedDf.groupby('promptID'):
-                safeNameStr = str(promptID).replace(":", "_").replace("+", "_").replace(" ", "_").replace("/", "_")
-                singlePath = self.singlePromptCmbOutputDir / f"{safeNameStr}_result.csv"
-                groupDf.to_csv(singlePath, index=False, encoding='utf-8-sig')
-
-            logging.info(f"Parsing complete: {len(parsedDf)} records -> {self.outputCsvPath}")
-            return self.outputCsvPath
-
-        except ParsingError:
-            raise
-        except Exception as e:
-            raise ParsingError(f"解析暫存檔時發生錯誤: {e}") from e
+        loweredText = blockText.lower()
+        if any(k in loweredText for k in self._posKeywords):
+            return 1
+        if any(k in loweredText for k in self._negKeywords):
+            return 0
+        return -1

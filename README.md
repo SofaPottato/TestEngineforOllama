@@ -75,7 +75,7 @@ python call_LLM.py --config configs/PPI_config.yaml
 | `paths.promptCmbPath` | Prompt 組合 CSV（欄位：`promptID`, `promptText`） |
 | `paths.outputRoot` | 所有輸出的根目錄；其它 `*Path` 未填則自動衍生 |
 | `selectedModels` | 要測試的 Ollama 模型清單 |
-| `pairNumber` | 每個 LLM task 包含的 item 數；1 = 單筆模式，>1 = 批次模式 |
+| `maxPairsPerBatch` | 每個 LLM task 包含的 item 數；1 = 單筆模式，>1 = 批次模式 |
 | `contextColumns` | Task CSV 中對應 `taskTemplate` 佔位符的欄位 |
 | `pairColumns` | `pairs` JSON 中對應 `pairTemplate` 佔位符的欄位 |
 | `taskTemplate` / `pairTemplate` | Prompt 模板字串 |

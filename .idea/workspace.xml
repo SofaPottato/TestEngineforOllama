@@ -3,28 +3,45 @@
   <component name="ChangeListManager">
     <list default="true" id="b1c131e8-9ce6-42f7-8e53-2f12989c6684" name="Changes" comment="3_23change">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/call_LLM.py" beforeDir="false" afterPath="$PROJECT_DIR$/call_LLM.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/configs/PPI_config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/configs/PPI_config.yaml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/configs/llm_config.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/configs/llm_config.yaml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/Temp.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/correctness_heatmap.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/eval_summary.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_gemma3_270m_EMO01___RAR02.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_gemma3_270m_S2A01___RE201.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_EMO01___RAR02.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_llama3.2_1b_S2A01___RE201.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_phi3_latest_EMO01___RAR02.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/plots/CM_phi3_latest_S2A01___RE201.png" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/raw.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/result.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/samples_to_review.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/EMO01___RAR02_result.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/singleOutput/S2A01___RE201_result.csv" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/test_V8/test_merge.csv" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/PPI/LLL/LLL-tasks.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/PPI/LLL/LLL-tasks.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/PPI/LLL/output/eval/samples_to_review.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/PPI/LLL/output/eval/samples_to_review.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/PPI/LLL/output/fullInfo.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/PPI/LLL/output/fullInfo.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/PPI/LLL/output/partialInfo.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/PPI/LLL/output/partialInfo.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/PPI/LLL/output/raw.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/PPI/LLL/output/raw.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/PPI/LLL/output/result.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/PPI/LLL/output/result.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/PPI/LLL/output/singleOutput/EMO01_result.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/PPI/LLL/output/singleOutput/EMO01_result.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/prompt_output/test_auto_prompts.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/prompt_output/test_auto_prompts.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testv1/output/eval/correctness_heatmap.png" beforeDir="false" afterPath="$PROJECT_DIR$/data/testv1/output/eval/correctness_heatmap.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testv1/output/eval/eval_summary.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/testv1/output/eval/eval_summary.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testv1/output/eval/plots/CM_llama3.2_1b_EMO01.png" beforeDir="false" afterPath="$PROJECT_DIR$/data/testv1/output/eval/plots/CM_llama3.2_1b_EMO01.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testv1/output/eval/samples_to_review.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/testv1/output/eval/samples_to_review.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testv1/output/fullInfo.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/testv1/output/fullInfo.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testv1/output/partialInfo.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/testv1/output/partialInfo.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testv1/output/prompt_preview.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/testv1/output/prompt_preview.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testv1/output/raw.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/testv1/output/raw.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testv1/output/result.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/testv1/output/result.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testv1/output/singleOutput/EMO01_result.csv" beforeDir="false" afterPath="$PROJECT_DIR$/data/testv1/output/singleOutput/EMO01_result.csv" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/PPI_prompt_structure.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/System_Design_Document.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/preprocess_flow.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/project_overview.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/prompt_structure.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/docs/task_generation.svg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/Evaluate.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/Evaluate.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/llm_modules/LLMResultProcessor.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/LLMResultProcessor.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/OllamaEngine.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/OllamaEngine.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/OutputParser.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/OutputParser.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/llm_modules/Pipeline.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/Pipeline.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/llm_modules/TaskBuilder.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/CidTaskBuilder.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/test_v5_log.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/test_v9_log.log" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/PromptFormatter.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/PromptFormatter.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/llm_modules/utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/llm_modules/utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/testLog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/testLog.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/preprocess/bc5cdr.py" beforeDir="false" afterPath="$PROJECT_DIR$/preprocess/bc5cdr.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/preprocess/lll.py" beforeDir="false" afterPath="$PROJECT_DIR$/preprocess/lll.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -99,7 +116,6 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-PY-253.31033.139" />
         <option value="bundled-python-sdk-2653e85de345-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.31033.139" />
       </set>
     </attachedChunks>
@@ -130,6 +146,7 @@
       <workItem from="1775186799279" duration="611000" />
       <workItem from="1775545605052" duration="178000" />
       <workItem from="1775547769913" duration="1299000" />
+      <workItem from="1778057709677" duration="10000" />
     </task>
     <task id="LOCAL-00001" summary="3_23change">
       <option name="closed" value="true" />

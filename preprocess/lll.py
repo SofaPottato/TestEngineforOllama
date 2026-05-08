@@ -1,26 +1,25 @@
 """
 LLL 資料集前處理腳本。
-將 LLL-test.csv 轉為標準 Task CSV 格式，供 Pipeline 使用。
+將 LLL-test.csv 轉為標準 Task CSV 格式（single-target），供 Pipeline 使用。
 
 LLL 原始欄位：
   - docid, isValid, passage, passageid
 
-標準 Task CSV 欄位（輸出）：
-  - taskID:   唯一識別碼，使用 row index（每句一筆 task）
-  - passage:  單句文本（對應 taskTemplate 的 {passage} 佔位符）
-  - pairs:    JSON array，只帶 label（實體已固定為 PROTEIN1/PROTEIN2 嵌入句中）
+標準 Task CSV 欄位（輸出，single-target 格式）：
+  - taskID:  唯一識別碼，使用 passageid + row index
+  - passage: 單句文本（對應 taskTemplate 的 {passage} 佔位符）
+  - label:   true label 字串（對應 config.labelColumn，由 Pipeline 自動包成 pairs）
 
 使用方式：
   python preprocess/lll.py
 """
 
-import json
 import logging
 import pandas as pd
 from pathlib import Path
 
-INPUT_PATH  = "data\PPI\LLL-train.csv"
-OUTPUT_PATH = "data\PPI\LLL\LLL-tasks.csv"
+INPUT_PATH  = "data/PPI/LLL-train.csv"
+OUTPUT_PATH = "data/PPI/LLL/LLL-tasks.csv"
 
 
 def preprocess():
@@ -34,11 +33,10 @@ def preprocess():
     tasks = []
     for i, row in df.iterrows():
         label = "true" if str(row['isValid']).strip().upper() == "TRUE" else "false"
-        pair = [{"label": label}]
         tasks.append({
             "taskID":  str(row['passageid']) + f"_{i}",
             "passage": str(row['passage']),
-            "pairs":   json.dumps(pair, ensure_ascii=False)
+            "label":   label,
         })
 
     outPath = Path(OUTPUT_PATH)

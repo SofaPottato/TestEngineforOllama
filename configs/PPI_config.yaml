@@ -15,15 +15,22 @@ paths:
   singlePromptCmbOutputDir: "singleOutput"
   partialInfoPath:          "partialInfo.csv"
   fullInfoPath:             "fullInfo.csv"
+  promptPreviewPath:        "promptPreview.csv"
   evalDir:                  "eval"
 
 # --- 模型 ---
 selectedModels: ["llama3.2:1b"]
-pairNumber: 1      
+maxPairsPerBatch: 1
 
 # --- Prompt 模板 ---
 # contextColumns：Task CSV 中對應 taskTemplate 佔位符的欄位名稱
 contextColumns: ["passage"]
+
+# single-target 模式：pairColumns 空 + 指定 labelColumn
+# Pipeline 會把 Task CSV 的 label 欄位自動包成 pairs，供下游統一處理
+pairColumns: []
+labelColumn: "label"
+
 taskTemplate: |
   Sentence: {passage}
 
@@ -33,7 +40,7 @@ taskTemplate: |
   1. Output ONLY: "1: Yes" or "1: No"
   2. Do NOT provide explanations.
   3. Do NOT use Markdown formatting.
-
+  
 # --- 標籤映射 ---
 # LLL 的 isValid 欄位為 TRUE/FALSE
 labelMap:
